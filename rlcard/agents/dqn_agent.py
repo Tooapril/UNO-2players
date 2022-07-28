@@ -191,7 +191,7 @@ class DQNAgent(object):
         Returns:
             loss (float): The loss of the current batch.
         '''
-        state_batch, action_batch, reward_batch, next_state_batch, legal_actions_batch, done_batch = self.memory.sample()
+        state_batch, action_batch, reward_batch, next_state_batch, legal_actions_batch, done_batch = self.memory.sample() # 从 memory 中获取 batch_size 大小的数据
 
         # Calculate best next actions using Q-network (Double DQN)
         q_values_next = self.q_estimator.predict_nograd(next_state_batch)
@@ -204,17 +204,22 @@ class DQNAgent(object):
         best_actions = np.argmax(masked_q_values, axis=1)
 
         # Evaluate best next actions using Target-network (Double DQN)
+        # 将 q_estimateor 网络针对一个 batch_size 的数据计算出 best_actions，
+        # 再由 target_estimator 网络计算出针对以上 best_actions 所对应的 Q 值
+        # 两个 Q 网络输入的都是一个 batch_size 中每个状态的 next_state(obs)
         q_values_next_target = self.target_estimator.predict_nograd(next_state_batch)
         target_batch = reward_batch + np.invert(done_batch).astype(np.float32) * \
             self.discount_factor * q_values_next_target[np.arange(self.batch_size), best_actions]
 
         # Perform gradient descent update
+        # 根据样本 state、action、target 值对 q_estimator 网络进行更新
         state_batch = np.array(state_batch)
 
         loss = self.q_estimator.update(state_batch, action_batch, target_batch)
         print('\rINFO - Step {}, rl-loss: {}'.format(self.total_t, loss), end='')
 
         # Update the target estimator
+        # 每 update_target_estimator_every 次将 q_estimator 的网络参数更新至 target_estimator 网络
         if self.train_t % self.update_target_estimator_every == 0:
             self.target_estimator = deepcopy(self.q_estimator)
             print("\nINFO - Copied model parameters to target network.")
@@ -320,12 +325,15 @@ class Estimator(object):
         y = torch.from_numpy(y).float().to(self.device)
 
         # (batch, state_shape) -> (batch, num_actions)
+        # 将样本每个 state 传入网络后，计算出来的 Q 值存入 q_sa
         q_as = self.qnet(s)
 
         # (batch, num_actions) -> (batch, )
+        # 将样本采取的 action 对应 q_sa 计算出来的 Q 值进行存储
         Q = torch.gather(q_as, dim=-1, index=a.unsqueeze(-1)).squeeze(-1)
 
         # update model
+        # 将样本已采取的动作所对应的 Q 值和经过 DDQN 针对下一状态预测出来的 Q 值进行求 loss 并更新网络操作
         batch_loss = self.mse_loss(Q, y)
         batch_loss.backward()
         self.optimizer.step()

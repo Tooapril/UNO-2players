@@ -29,6 +29,7 @@ from .model import DMCModel
 from .utils import get_batch, create_buffers, create_optimizers, act, log
 
 def compute_loss(logits, targets):
+    '''MSE compute loss'''
     loss = ((logits - targets)**2).mean()
     return loss
 
@@ -43,9 +44,11 @@ def learn(position,
           lock):
     """Performs a learning (optimization) step."""
     device = torch.device('cuda:'+str(training_device))
+    # 将 batch_size * unroll_length 个数据组装好
     state = torch.flatten(batch['state'].to(device), 0, 1).float()
     action = torch.flatten(batch['action'].to(device), 0, 1).float()
     target = torch.flatten(batch['target'].to(device), 0, 1)
+    # 计算本 batch 中 payoffs 的平均值
     episode_returns = batch['episode_return'][batch['done']]
     mean_episode_return_buf[position].append(torch.mean(episode_returns).to(device))
 
@@ -67,16 +70,15 @@ def learn(position,
         return stats
 
 
-class DMCTrainer:    
+class DMCTrainer:
     def __init__(self,
                  env,
                  load_model=False,
-                 xpid='dmc',
                  save_interval=30,
                  num_actor_devices=1,
                  num_actors = 5,
                  training_device=0,
-                 savedir='experiments/dmc_result',
+                 log_dir='experiments/dmc_result',
                  total_frames=100000000000,
                  exp_epsilon=0.01,
                  batch_size=32,
@@ -94,12 +96,11 @@ class DMCTrainer:
         Args:
             env: RLCard environment
             load_model (boolean): Whether loading an existing model
-            xpid (string): Experiment id (default: dmc)
             save_interval (int): Time interval (in minutes) at which to save the model
             num_actor_devices (int): The number devices used for simulation
             num_actors (int): Number of actors for each simulation device
             training_device (int): The index of the GPU used for training models
-            savedir (string): Root dir where experiment data will be saved
+            log_dir (string): Root dir where experiment data will be saved
             total_frames (int): Total environment frames to train for
             exp_epsilon (float): The prbability for exploration
             batch_size (int): Learner batch size
@@ -112,35 +113,33 @@ class DMCTrainer:
             momentum (float): RMSProp momentum
             epsilon (float): RMSProp epsilon
         '''
-        self.env = env
+        self.env = env # 已创建好的 Env
 
         self.plogger = FileWriter(
-            xpid=xpid,
-            rootdir=savedir,
-        )
+            rootdir=log_dir,
+        ) # 将 logger 存入 log_dir 下
 
         self.checkpointpath = os.path.expandvars(
-            os.path.expanduser('%s/%s/%s' % (savedir, xpid, 'model.tar')))
+            os.path.expanduser('%s/%s' % (log_dir, 'model.tar')))
 
         self.T = unroll_length
         self.B = batch_size
 
-        self.xpid = xpid
-        self.load_model = load_model
-        self.savedir = savedir
-        self.save_interval = save_interval
-        self.num_actor_devices = num_actor_devices
-        self.num_actors = num_actors
-        self.training_device = training_device
-        self.total_frames = total_frames
-        self.exp_epsilon = exp_epsilon
-        self.num_buffers = num_buffers
-        self.num_threads = num_threads
-        self.max_grad_norm = max_grad_norm
-        self.learning_rate =learning_rate
-        self.alpha = alpha
-        self.momentum = momentum
-        self.epsilon = epsilon
+        self.load_model = load_model # 是否加载已有模型
+        self.log_dir = log_dir # 存储实验数据的根目录
+        self.save_interval = save_interval # 间隔多少 minute 存储一下模型
+        self.num_actor_devices = num_actor_devices # 使用模拟器的设备数
+        self.num_actors = num_actors # 每个模拟器上的 actor 数
+        self.training_device = training_device # GPU 上训练模型的索引号
+        self.total_frames = total_frames # 全部环境训练帧数
+        self.exp_epsilon = exp_epsilon # 𝛆 探索的概率
+        self.num_buffers = num_buffers # 学习者的批大小
+        self.num_threads = num_threads # 学习者的线程数
+        self.max_grad_norm = max_grad_norm # 最大正则梯度
+        self.learning_rate = learning_rate # 学习率
+        self.alpha = alpha # RMSProp 平滑连续率
+        self.momentum = momentum # RMSProp 动力值
+        self.epsilon = epsilon # RMSProp 𝛆
 
         self.action_shape = self.env.action_shape
         if self.action_shape[0] == None:  # One-hot encoding
@@ -155,10 +154,10 @@ class DMCTrainer:
             model = DMCModel(self.env.state_shape,
                              self.action_shape,
                              exp_epsilon=self.exp_epsilon,
-                             device=device)
-            model.share_memory()
-            model.eval()
-            models.append(model)
+                             device=device) # 创建 num_players 个 DMC Agent 合并为一个 DMC Model
+            model.share_memory() # 分别对 num_players 个 DMC Agent 的网络部分进行共享内存
+            model.eval() # 告诉网络，这个阶段是用来测试的，于是模型的参数在该阶段不进行更新
+            models.append(model) # 对每一个设备都初始化一个 DMC Model
 
         # Initialize buffers
         buffers = create_buffers(self.T,
@@ -268,7 +267,7 @@ class DMCTrainer:
             # Save the weights for evaluation purpose
             for position in range(self.env.num_players):
                 model_weights_dir = os.path.expandvars(os.path.expanduser(
-                    '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_'+str(frames)+'.pth')))
+                    '%s/%s' % (self.log_dir, str(position)+'_'+str(frames)+'.pth')))
                 torch.save(learner_model.get_agent(position), model_weights_dir)
 
         timer = timeit.default_timer
@@ -297,4 +296,4 @@ class DMCTrainer:
             log.info('Learning finished after %d frames.', frames)
 
         checkpoint(frames)
-        plogger.close()
+        self.plogger.close()

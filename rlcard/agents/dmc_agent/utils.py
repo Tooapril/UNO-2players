@@ -35,7 +35,7 @@ def get_batch(free_queue,
               batch_size,
               lock):
     with lock:
-        indices = [full_queue.get() for _ in range(batch_size)]
+        indices = [full_queue.get() for _ in range(batch_size)] # 在 batch_size 大小的 buffers 中取 batch_size 大小的 batch 数据进行学习，达到抽样的效果
     batch = {
         key: torch.stack([buffers[key][m] for m in indices], dim=1)
         for key in buffers
@@ -105,12 +105,12 @@ def act(i, device, T, free_queue, full_queue, model, buffers, env):
                     target_buf[p].extend([float(payoffs[p]) for _ in range(diff)])
                     # State and action
                     for i in range(0, len(trajectories[p])-2, 2):
-                        state = trajectories[p][i]['obs']
-                        action = env.get_action_feature(trajectories[p][i+1])
+                        state = trajectories[p][i]['obs'] # 获取本局游戏 玩家 p 的所有 state（4*4*15）
+                        action = env.get_action_feature(trajectories[p][i+1]) # 获取本局游戏 玩家 p 的所有 action（61 —— one-hot编码）
                         state_buf[p].append(torch.from_numpy(state))
                         action_buf[p].append(torch.from_numpy(action))
                 
-                if size[p] > T:
+                if size[p] > T: # 每个玩家 p 达到 T 次数据量时，将数据存入 queue 便于后续更新
                     index = free_queue[p].get()
                     if index is None:
                         break

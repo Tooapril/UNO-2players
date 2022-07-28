@@ -60,14 +60,8 @@ def gather_metadata() -> Dict:
 
 class FileWriter:
     def __init__(self,
-                 xpid: str = None,
                  xp_args: dict = None,
                  rootdir: str = '~/palaas'):
-        if not xpid:
-            # make unique id
-            xpid = '{proc}_{unixtime}'.format(
-                proc=os.getpid(), unixtime=int(time.time()))
-        self.xpid = xpid
         self._tick = 0
 
         # metadata gathering
@@ -78,7 +72,6 @@ class FileWriter:
         # (and rewrite the args) we might have non-serializable objects (or
         # other nasty stuff).
         self.metadata['args'] = copy.deepcopy(xp_args)
-        self.metadata['xpid'] = self.xpid
 
         formatter = logging.Formatter('%(message)s')
         self._logger = logging.getLogger('palaas/out')
@@ -91,12 +84,12 @@ class FileWriter:
 
         rootdir = os.path.expandvars(os.path.expanduser(rootdir))
         # to file handler
-        self.basepath = os.path.join(rootdir, self.xpid)
+        self.basepath = os.path.join(rootdir)
 
-        if not os.path.exists(self.basepath):
+        if not os.path.exists(self.basepath): # 如果没有找到日志目录。则创建一个日志目录，并输出日志
             self._logger.info('Creating log directory: %s', self.basepath)
             os.makedirs(self.basepath, exist_ok=True)
-        else:
+        else: # 如果找到日志目录，直接输出日志
             self._logger.info('Found log directory: %s', self.basepath)
 
         # NOTE: remove latest because it creates errors when running on slurm 
@@ -117,14 +110,14 @@ class FileWriter:
         )
 
         self._logger.info('Saving arguments to %s', self.paths['meta'])
-        if os.path.exists(self.paths['meta']):
+        if os.path.exists(self.paths['meta']): # 如果 meta.json 文件已存在，则输出警告
             self._logger.warning('Path to meta file already exists. '
                                  'Not overriding meta.')
         else:
             self._save_metadata()
 
-        self._logger.info('Saving messages to %s', self.paths['msg'])
-        if os.path.exists(self.paths['msg']):
+        self._logger.info('Saving messages to %s', self.paths['msg']) 
+        if os.path.exists(self.paths['msg']): # 如果 out.log 文件已存在，则输出警告
             self._logger.warning('Path to message file already exists. '
                                  'New data will be appended.')
 
@@ -132,15 +125,15 @@ class FileWriter:
         fhandle.setFormatter(formatter)
         self._logger.addHandler(fhandle)
 
-        self._logger.info('Saving logs data to %s', self.paths['logs'])
-        self._logger.info('Saving logs\' fields to %s', self.paths['fields'])
-        if os.path.exists(self.paths['logs']):
+        self._logger.info('Saving logs data to %s', self.paths['logs']) # 输出日志
+        self._logger.info('Saving logs\' fields to %s', self.paths['fields']) # 输出日志
+        if os.path.exists(self.paths['logs']): # 如果 log.csv 文件存在，则输出警告并打开文件
             self._logger.warning('Path to log file already exists. '
                                  'New data will be appended.')
             with open(self.paths['fields'], 'r') as csvfile:
                 reader = csv.reader(csvfile)
                 self.fieldnames = list(reader)[0]
-        else:
+        else: # 如果文件不存在，则存储表头
             self.fieldnames = ['_tick', '_time']
 
     def log(self, to_log: Dict, tick: int = None,
