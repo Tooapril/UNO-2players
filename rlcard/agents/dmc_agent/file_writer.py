@@ -142,7 +142,7 @@ class FileWriter:
             raise NotImplementedError
         else:
             to_log['_tick'] = self._tick
-            self._tick += 1
+            self._tick += 1 # 记录一条数据累计加一
         to_log['_time'] = time.time()
 
         old_len = len(self.fieldnames)

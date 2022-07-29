@@ -130,3 +130,6 @@ dmypy.json
 
 # torch script file
 *.pth
+
+# nohup log file
+*.out

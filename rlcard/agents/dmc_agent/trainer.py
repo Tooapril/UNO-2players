@@ -24,6 +24,9 @@ import torch
 from torch import multiprocessing as mp
 from torch import nn
 
+from rlcard.utils.logger import Logger
+from rlcard.utils.utils import plot_curve, tournament
+
 from .file_writer import FileWriter
 from .model import DMCModel
 from .utils import get_batch, create_buffers, create_optimizers, act, log
@@ -78,8 +81,9 @@ class DMCTrainer:
                  num_actor_devices=1,
                  num_actors = 5,
                  training_device=0,
-                 log_dir='experiments/dmc_result',
-                 total_frames=100000000000,
+                 savedir='experiments/dmc_result',
+                 total_frames=10000000000,
+                 num_eval_games=10000,
                  exp_epsilon=0.01,
                  batch_size=32,
                  unroll_length=100,
@@ -100,7 +104,7 @@ class DMCTrainer:
             num_actor_devices (int): The number devices used for simulation
             num_actors (int): Number of actors for each simulation device
             training_device (int): The index of the GPU used for training models
-            log_dir (string): Root dir where experiment data will be saved
+            savedir (string): Root dir where experiment data will be saved
             total_frames (int): Total environment frames to train for
             exp_epsilon (float): The prbability for exploration
             batch_size (int): Learner batch size
@@ -116,22 +120,23 @@ class DMCTrainer:
         self.env = env # 已创建好的 Env
 
         self.plogger = FileWriter(
-            rootdir=log_dir,
-        ) # 将 logger 存入 log_dir 下
+            rootdir=savedir,
+        ) # 将 logger 存入 savedir 下
 
         self.checkpointpath = os.path.expandvars(
-            os.path.expanduser('%s/%s' % (log_dir, 'model.tar')))
+            os.path.expanduser('%s/%s' % (savedir, 'model.tar')))
 
         self.T = unroll_length
         self.B = batch_size
 
         self.load_model = load_model # 是否加载已有模型
-        self.log_dir = log_dir # 存储实验数据的根目录
+        self.savedir = savedir # 存储实验数据的根目录
         self.save_interval = save_interval # 间隔多少 minute 存储一下模型
         self.num_actor_devices = num_actor_devices # 使用模拟器的设备数
         self.num_actors = num_actors # 每个模拟器上的 actor 数
         self.training_device = training_device # GPU 上训练模型的索引号
         self.total_frames = total_frames # 全部环境训练帧数
+        self.num_eval_games = num_eval_games # 每次断点评估游戏 reward 的局数
         self.exp_epsilon = exp_epsilon # 𝛆 探索的概率
         self.num_buffers = num_buffers # 学习者的批大小
         self.num_threads = num_threads # 学习者的线程数
@@ -242,6 +247,7 @@ class DMCTrainer:
                 for p in range(self.env.num_players):
                     free_queue[device][p].put(m)
 
+        
         threads = []
         locks = [[threading.Lock() for _ in range(self.env.num_players)] for _ in range(self.num_actor_devices)]
         position_locks = [threading.Lock() for _ in range(self.env.num_players)]
@@ -267,27 +273,32 @@ class DMCTrainer:
             # Save the weights for evaluation purpose
             for position in range(self.env.num_players):
                 model_weights_dir = os.path.expandvars(os.path.expanduser(
-                    '%s/%s' % (self.log_dir, str(position)+'_'+str(frames)+'.pth')))
+                    '%s/%s' % (self.savedir, str(position)+'_'+str(frames)+'.pth')))
                 torch.save(learner_model.get_agent(position), model_weights_dir)
 
         timer = timeit.default_timer
         try:
             last_checkpoint_time = timer() - self.save_interval * 60
-            while frames < self.total_frames:
-                start_frames = frames
-                start_time = timer()
-                time.sleep(5)
+            with Logger(self.savedir) as logger:
+                while frames < self.total_frames:
+                    start_frames = frames
+                    start_time = timer()
+                    time.sleep(5)
 
-                if timer() - last_checkpoint_time > self.save_interval * 60:
-                    checkpoint(frames)
-                    last_checkpoint_time = timer()
+                    if timer() - last_checkpoint_time > self.save_interval * 60:
+                        checkpoint(frames)
+                        logger.log_performance(self.env.timestep, tournament(self.env, self.num_eval_games)[0])
+                        last_checkpoint_time = timer()
 
-                end_time = timer()
-                fps = (frames - start_frames) / (end_time - start_time)
-                log.info('After %i frames: @ %.1f fps Stats:\n%s',
-                             frames,
-                             fps,
-                             pprint.pformat(stats))
+                    end_time = timer()
+                    fps = (frames - start_frames) / (end_time - start_time)
+                    log.info('After %i frames: @ %.1f fps Stats:\n%s',
+                                frames,
+                                fps,
+                                pprint.pformat(stats))
+                
+                # Get the paths
+                csv_path, fig_path = logger.csv_path, logger.fig_path
         except KeyboardInterrupt:
             return
         else:
@@ -296,4 +307,6 @@ class DMCTrainer:
             log.info('Learning finished after %d frames.', frames)
 
         checkpoint(frames)
+        # Plot the learning curve
+        plot_curve(csv_path, fig_path, 'dmc')
         self.plogger.close()
