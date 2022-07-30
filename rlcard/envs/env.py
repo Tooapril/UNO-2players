@@ -47,6 +47,9 @@ class Env(object):
 
         # Set random seed, default is None
         self.seed(config['seed'])
+        
+        # Initial the agents
+        self.agents = []
 
 
     def reset(self):

@@ -287,7 +287,8 @@ class DMCTrainer:
 
                     if timer() - last_checkpoint_time > self.save_interval * 60:
                         checkpoint(frames)
-                        logger.log_performance(self.env.timestep, tournament(self.env, self.num_eval_games)[0])
+                        if len(self.env.agents) != 0:
+                            logger.log_performance(self.env.timestep, tournament(self.env, self.num_eval_games)[0])
                         last_checkpoint_time = timer()
 
                     end_time = timer()
