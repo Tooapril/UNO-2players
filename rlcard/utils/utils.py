@@ -163,7 +163,7 @@ def reorganize(trajectories, payoffs):
 
     for player in range(num_players):
         for i in range(0, len(trajectories[player])-2, 2):
-            if i ==len(trajectories[player])-3:
+            if i == len(trajectories[player]) - 3:
                 reward = payoffs[player]
                 done =True
             else:

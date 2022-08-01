@@ -31,25 +31,22 @@ class Env(object):
         # Currently only support blackjack、limit-holdem、no-limit-holdem
         # TODO support game configurations for all the games
         supported_envs = ['blackjack', 'leduc-holdem', 'limit-holdem', 'no-limit-holdem']
-        if self.name in supported_envs:
+        if self.name in supported_envs: # 将 config 的配置替换 default_game_config
             _game_config = self.default_game_config.copy()
             for key in config:
                 if key in _game_config:
                     _game_config[key] = config[key]
-            self.game.configure(_game_config)
+            self.game.configure(_game_config) # 初始化游戏玩家数
 
         # Get the number of players/actions in this game
-        self.num_players = self.game.get_num_players()
-        self.num_actions = self.game.get_num_actions()
+        self.num_players = self.game.get_num_players() # 玩家数
+        self.num_actions = self.game.get_num_actions() # 动作数
 
         # A counter for the timesteps
         self.timestep = 0
 
         # Set random seed, default is None
         self.seed(config['seed'])
-        
-        # Initial the agents
-        self.agents = []
 
 
     def reset(self):
@@ -63,7 +60,7 @@ class Env(object):
         '''
         state, player_id = self.game.init_game()
         self.action_recorder = []
-        return self._extract_state(state), player_id
+        return self._extract_state(state), player_id # 返回编码后的玩家 state 和 玩家 id
 
     def step(self, action, raw_action=False):
         ''' Step forward
@@ -83,8 +80,8 @@ class Env(object):
 
         self.timestep += 1
         # Record the action for human interface
-        self.action_recorder.append((self.get_player_id(), action))
-        next_state, player_id = self.game.step(action)
+        self.action_recorder.append((self.get_player_id(), action)) # 记录对应玩家采取的动作
+        next_state, player_id = self.game.step(action) # 采取 action 后更新环境 state 和 player_id
 
         return self._extract_state(next_state), player_id
 
@@ -137,37 +134,37 @@ class Env(object):
               The second dimension is for different transitions. The third dimension is for the contents of each transiton
         '''
         trajectories = [[] for _ in range(self.num_players)]
-        state, player_id = self.reset()
+        state, player_id = self.reset() # 重置一局游戏的 玩家 state 和 id
 
         # Loop to play the game
-        trajectories[player_id].append(state)
-        while not self.is_over():
-            # Agent plays
-            if not is_training:
+        trajectories[player_id].append(state) # 将对应玩家初始状态存入 trajectories
+        while not self.is_over(): # 游戏没结束则继续
+            # Agent plays（根据当前状态传入 Q 网络选择合法动作）
+            if not is_training: # 非训练模式，评估
                 action, _ = self.agents[player_id].eval_step(state)
-            else:
+            else: # 训练模式，以 𝛆-greedy 的策略进行探索与利用
                 action = self.agents[player_id].step(state)
 
-            # Environment steps
+            # Environment steps（采取 action 后更新 玩家 state 和 id）
             next_state, next_player_id = self.step(action, self.agents[player_id].use_raw)
-            # Save action
-            trajectories[player_id].append(action)
+            # Save action (对应玩家位置存储采取 action 前的 state)
+            trajectories[player_id].append(action) # 将玩家采取的动作存入 trajectories
 
             # Set the state and player
             state = next_state
             player_id = next_player_id
 
             # Save state.
-            if not self.game.is_over():
+            if not self.game.is_over(): # 游戏环境暂未结束，将最新的 state 存入对应玩家 trajectories
                 trajectories[player_id].append(state)
 
         # Add a final state to all the players
         for player_id in range(self.num_players):
-            state = self.get_state(player_id)
-            trajectories[player_id].append(state)
+            state = self.get_state(player_id) # 获取对应玩家 state
+            trajectories[player_id].append(state) # 并将最新 state 存入对应玩家 trajectories
 
         # Payoffs
-        payoffs = self.get_payoffs()
+        payoffs = self.get_payoffs() # 计算对应玩家游戏结果（胜、平、负）
 
         return trajectories, payoffs
 
@@ -228,7 +225,7 @@ class Env(object):
         feature[action] = 1
         return feature
 
-    def seed(self, seed=None):
+    def seed(self, seed=None): # 初始化 seed 个随机种子
         self.np_random, seed = seeding.np_random(seed)
         self.game.np_random = self.np_random
         return seed

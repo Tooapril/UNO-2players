@@ -30,7 +30,7 @@ def colorize(string, color, bold=False, highlight = False):
 def error(msg, *args):
     print(colorize('%s: %s'%('ERROR', msg % args), 'red'))
 
-def np_random(seed=None):
+def np_random(seed=None): # ❓
     if seed is not None and not (isinstance(seed, int) and 0 <= seed):
         raise error.Error('Seed must be a non-negative integer or omitted, not {}'.format(seed))
 
@@ -38,7 +38,7 @@ def np_random(seed=None):
 
     rng = np.random.RandomState()
     rng.seed(_int_list_from_bigint(hash_seed(seed)))
-    return rng, seed
+    return rng, seed # 返回创建的两种随机种子数
 
 def hash_seed(seed=None, max_bytes=8):
     """Any given evaluation is likely to have many PRNG's active at
@@ -88,7 +88,7 @@ def create_seed(a=None, max_bytes=8):
     return a
 
 # TODO: don't hardcode sizeof_int here
-def _bigint_from_bytes(_bytes):
+def _bigint_from_bytes(_bytes): # ❓
     sizeof_int = 4
     padding = sizeof_int - len(_bytes) % sizeof_int
     _bytes += b'\0' * padding

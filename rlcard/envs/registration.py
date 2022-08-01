@@ -19,7 +19,7 @@ class EnvSpec(object):
         '''
         self.env_id = env_id
         mod_name, class_name = entry_point.split(':')
-        self._entry_point = getattr(importlib.import_module(mod_name), class_name)
+        self._entry_point = getattr(importlib.import_module(mod_name), class_name) # 在 mod_name 路径下获取 class_name 对象
 
     def make(self, config=DEFAULT_CONFIG):
         ''' Instantiates an instance of the environment
@@ -28,7 +28,7 @@ class EnvSpec(object):
             env (Env): An instance of the environemnt
             config (dict): A dictionary of the environment settings
         '''
-        env = self._entry_point(config)
+        env = self._entry_point(config) # 对指定环境进行初始化
         return env
 
 class EnvRegistry(object):

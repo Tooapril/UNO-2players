@@ -23,13 +23,13 @@ class UnoEnv(Env):
 
     def _extract_state(self, state):
         obs = np.zeros((4, 4, 15), dtype=int)
-        encode_hand(obs[:3], state['hand'])
-        encode_target(obs[3], state['target'])
-        legal_action_id = self._get_legal_actions()
-        extracted_state = {'obs': obs, 'legal_actions': legal_action_id}
-        extracted_state['raw_obs'] = state
-        extracted_state['raw_legal_actions'] = [a for a in state['legal_actions']]
-        extracted_state['action_record'] = self.action_recorder
+        encode_hand(obs[:3], state['hand']) # obs[0] - obs[2] 记录玩家当前手牌
+        encode_target(obs[3], state['target']) # obs[3] 记录当前牌面牌值
+        legal_action_id = self._get_legal_actions() # 记录当前玩家对应当前牌面所有 legal_actions 的 id
+        extracted_state = {'obs': obs, 'legal_actions': legal_action_id} # 记录编码后的 obs 和 legal_action_id 值
+        extracted_state['raw_obs'] = state # 记录原始 state 值
+        extracted_state['raw_legal_actions'] = [a for a in state['legal_actions']] # 记录原始 legal_actions 值
+        extracted_state['action_record'] = self.action_recorder # 记录 action_recorder 值
         return extracted_state
 
     def get_payoffs(self):
@@ -46,7 +46,7 @@ class UnoEnv(Env):
 
     def _get_legal_actions(self):
         legal_actions = self.game.get_legal_actions()
-        legal_ids = {ACTION_SPACE[action]: None for action in legal_actions}
+        legal_ids = {ACTION_SPACE[action]: None for action in legal_actions} # 获取当前 legal_actions 的所有 id
         return OrderedDict(legal_ids)
 
     def get_perfect_information(self):

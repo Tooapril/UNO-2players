@@ -12,8 +12,7 @@ class UnoGame:
         self.allow_step_back = allow_step_back
         self.np_random = np.random.RandomState()
         self.num_players = num_players
-        self.payoffs = [0 for _ in range(self.num_players)]
-
+        
     def configure(self, game_config):
         ''' Specifiy some game specific parameters, such as number of players
         '''
@@ -31,28 +30,28 @@ class UnoGame:
         # Initalize payoffs
         self.payoffs = [0 for _ in range(self.num_players)]
 
-        # Initialize a dealer that can deal cards
+        # Initialize a dealer that can deal cards —— 初始化一副 uno 手牌
         self.dealer = Dealer(self.np_random)
 
         # Initialize four players to play the game
         self.players = [Player(i, self.np_random) for i in range(self.num_players)]
 
-        # Deal 7 cards to each player to prepare for the game
+        # Deal 7 cards to each player to prepare for the game —— 给每个玩家发 7 张牌
         for player in self.players:
             self.dealer.deal_cards(player, 7)
 
-        # Initialize a Round
+        # Initialize a Round —— 初始化一个局面
         self.round = Round(self.dealer, self.num_players, self.np_random)
 
-        # flip and perfrom top card
-        top_card = self.round.flip_top_card()
-        self.round.perform_top_card(self.players, top_card)
+        # flip and perfrom top card —— 翻一张首牌
+        top_card = self.round.flip_top_card() # 从牌堆中翻一张首牌
+        self.round.perform_top_card(self.players, top_card) # 如果是功能牌则进行对应操作
 
         # Save the hisory for stepping back to the last state.
         self.history = []
 
-        player_id = self.round.current_player
-        state = self.get_state(player_id)
+        player_id = self.round.current_player # 获取当前玩家 id
+        state = self.get_state(player_id) # 获取当前玩家 state
         return state, player_id
 
     def step(self, action):
@@ -75,9 +74,9 @@ class UnoGame:
             his_players = deepcopy(self.players)
             self.history.append((his_dealer, his_players, his_round))
 
-        self.round.proceed_round(self.players, action)
+        self.round.proceed_round(self.players, action) # 当前局面 players 进行 action 操作后，局面变化
         player_id = self.round.current_player
-        state = self.get_state(player_id)
+        state = self.get_state(player_id) # 进行 action 后获取当前玩家的 state
         return state, player_id
 
     def step_back(self):
@@ -111,11 +110,14 @@ class UnoGame:
         Returns:
             (list): Each entry corresponds to the payoff of one player
         '''
-        winner = self.round.winner
-        if winner is not None and len(winner) == 1:
-            self.payoffs[winner[0]] = 1
-            self.payoffs[1 - winner[0]] = -1
-        return self.payoffs
+        # 使用简单的赢者置为 1 作为 payoffs
+        # winner = self.round.winner
+        # if winner is not None and len(winner) == 1:
+        #     self.payoffs[winner[0]] = 1
+        #     for index, _ in enumerate(self.payoffs):
+        #         if index != winner[0]:
+        #             self.payoffs[index] = -1
+        return self.round.get_payoffs(self.players)
 
     def get_legal_actions(self):
         ''' Return the legal actions for current player

@@ -35,18 +35,18 @@ def init_deck():
     card_info = Card.info
     for color in card_info['color']:
 
-        # init number cards
+        # init number cards —— 初始化数字牌
         for num in card_info['trait'][:10]:
             deck.append(Card('number', color, num))
             if num != '0':
                 deck.append(Card('number', color, num))
 
-        # init action cards
+        # init action cards —— 初始化功能牌
         for action in card_info['trait'][10:13]:
             deck.append(Card('action', color, action))
             deck.append(Card('action', color, action))
 
-        # init wild cards
+        # init wild cards —— 初始化万能牌
         for wild in card_info['trait'][-2:]:
             deck.append(Card('wild', color, wild))
     return deck
@@ -95,19 +95,19 @@ def encode_hand(plane, hand):
     '''
     # plane = np.zeros((3, 4, 15), dtype=int)
     plane[0] = np.ones((4, 15), dtype=int)
-    hand = hand2dict(hand)
+    hand = hand2dict(hand) # 统计各种牌拥有张数
     for card, count in hand.items():
         card_info = card.split('-')
-        color = COLOR_MAP[card_info[0]]
-        trait = TRAIT_MAP[card_info[1]]
-        if trait >= 13:
+        color = COLOR_MAP[card_info[0]] # 获取当前牌的颜色
+        trait = TRAIT_MAP[card_info[1]] # 获取当前牌的数字或种类
+        if trait >= 13: # 记录是否有万能牌 ❓
             if plane[1][0][trait] == 0:
                 for index in range(4):
                     plane[0][index][trait] = 0
                     plane[1][index][trait] = 1
-        else:
+        else: #❗️tips 除万能牌外，同一个颜色的牌型最多有且仅有 2 张
             plane[0][color][trait] = 0
-            plane[count][color][trait] = 1
+            plane[count][color][trait] = 1 
     return plane
 
 def encode_target(plane, target):

@@ -24,9 +24,6 @@ import torch
 from torch import multiprocessing as mp
 from torch import nn
 
-from rlcard.utils.logger import Logger
-from rlcard.utils.utils import plot_curve, tournament
-
 from .file_writer import FileWriter
 from .model import DMCModel
 from .utils import get_batch, create_buffers, create_optimizers, act, log
@@ -247,7 +244,6 @@ class DMCTrainer:
                 for p in range(self.env.num_players):
                     free_queue[device][p].put(m)
 
-        
         threads = []
         locks = [[threading.Lock() for _ in range(self.env.num_players)] for _ in range(self.num_actor_devices)]
         position_locks = [threading.Lock() for _ in range(self.env.num_players)]
@@ -279,27 +275,21 @@ class DMCTrainer:
         timer = timeit.default_timer
         try:
             last_checkpoint_time = timer() - self.save_interval * 60
-            with Logger(self.savedir) as logger:
-                while frames < self.total_frames:
-                    start_frames = frames
-                    start_time = timer()
-                    time.sleep(5)
+            while frames < self.total_frames:
+                start_frames = frames
+                start_time = timer()
+                time.sleep(5)
 
-                    if timer() - last_checkpoint_time > self.save_interval * 60:
-                        checkpoint(frames)
-                        if len(self.env.agents) != 0:
-                            logger.log_performance(self.env.timestep, tournament(self.env, self.num_eval_games)[0])
-                        last_checkpoint_time = timer()
+                if timer() - last_checkpoint_time > self.save_interval * 60:
+                    checkpoint(frames)
+                    last_checkpoint_time = timer()
 
-                    end_time = timer()
-                    fps = (frames - start_frames) / (end_time - start_time)
-                    log.info('After %i frames: @ %.1f fps Stats:\n%s',
-                                frames,
-                                fps,
-                                pprint.pformat(stats))
-                
-                # Get the paths
-                csv_path, fig_path = logger.csv_path, logger.fig_path
+                end_time = timer()
+                fps = (frames - start_frames) / (end_time - start_time)
+                log.info('After %i frames: @ %.1f fps Stats:\n%s',
+                             frames,
+                             fps,
+                             pprint.pformat(stats))
         except KeyboardInterrupt:
             return
         else:
@@ -308,6 +298,4 @@ class DMCTrainer:
             log.info('Learning finished after %d frames.', frames)
 
         checkpoint(frames)
-        # Plot the learning curve
-        plot_curve(csv_path, fig_path, 'dmc')
         self.plogger.close()

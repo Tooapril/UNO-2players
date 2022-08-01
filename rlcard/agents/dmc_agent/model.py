@@ -24,13 +24,13 @@ class DMCNet(nn.Module):
                  action_shape,
                  mlp_layers=[512,512,512,512,512]):
         super().__init__()
-        input_dim = np.prod(state_shape) + np.prod(action_shape)
+        input_dim = np.prod(state_shape) + np.prod(action_shape) # 将不同 Agent 状态空间与动作空间大小相加
         layer_dims = [input_dim] + mlp_layers
         fc = []
         for i in range(len(layer_dims)-1):
             fc.append(nn.Linear(layer_dims[i], layer_dims[i+1]))
             fc.append(nn.ReLU())
-        fc.append(nn.Linear(layer_dims[-1], 1))
+        fc.append(nn.Linear(layer_dims[-1], 1)) # 网络层最后输出为 1
         self.fc_layers = nn.Sequential(*fc)
 
     def forward(self, obs, actions):
@@ -56,9 +56,9 @@ class DMCAgent:
     def step(self, state):
         action_keys, values = self.predict(state)
 
-        if self.exp_epsilon > 0 and np.random.rand() < self.exp_epsilon:
+        if self.exp_epsilon > 0 and np.random.rand() < self.exp_epsilon: # 以 𝛆 的概率探索
             action = np.random.choice(action_keys)
-        else:
+        else: # 以 1 - 𝛆 的概率利用
             action_idx = np.argmax(values)
             action = action_keys[action_idx]
 
@@ -90,14 +90,14 @@ class DMCAgent:
         legal_actions = state['legal_actions']
         action_keys = np.array(list(legal_actions.keys()))
         action_values = list(legal_actions.values())
-        # One-hot encoding if there is no action features
+        # One-hot encoding if there is no action features —— 给 action_values 按照 action 下标进行 one-hot 编码
         for i in range(len(action_values)):
             if action_values[i] is None:
                 action_values[i] = np.zeros(self.action_shape[0])
                 action_values[i][action_keys[i]] = 1
-        action_values = np.array(action_values, dtype=np.float32)
+        action_values = np.array(action_values, dtype=np.float32) # 统一 action_values 的数据格式
 
-        obs = np.repeat(obs[np.newaxis, :], len(action_keys), axis=0)
+        obs = np.repeat(obs[np.newaxis, :], len(action_keys), axis=0) # 统一 obs 的数据格式
 
         # Predict Q values
         values = self.net.forward(torch.from_numpy(obs).to(self.device),
