@@ -16,7 +16,7 @@ class UnoRound:
         self.np_random = np_random
         self.dealer = dealer
         self.target = None
-        self.current_player = np.random.randint(0, 4)
+        self.current_player = np.random.randint(0, num_players)
         self.num_players = num_players
         self.direction = 1
         self.played_cards = []
