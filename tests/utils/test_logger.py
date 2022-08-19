@@ -15,7 +15,7 @@ class TestLogger(unittest.TestCase):
             logger.log_performance(1, 1)
             logger.log_performance(2, 2)
             logger.log_performance(3, 3)
-            logger.plot('aaa')
+            logger.plot('aaa')  # type: ignore
 
 if __name__ == '__main__':
     unittest.main()

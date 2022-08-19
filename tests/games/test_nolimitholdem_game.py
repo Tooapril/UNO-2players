@@ -148,18 +148,18 @@ class TestNolimitholdemMethods(unittest.TestCase):
 
         player_id = game.round.game_pointer
         game.step(Action.RAISE_POT)
-        step_raised = game.round.raised[player_id]
+        step_raised = game.round.raised[player_id]  # type: ignore
         self.assertEqual(8, step_raised)
 
         player_id = game.round.game_pointer
         game.step(Action.RAISE_POT)
-        step_raised = game.round.raised[player_id]
+        step_raised = game.round.raised[player_id]  # type: ignore
         self.assertEqual(16, step_raised)
 
         game.step(Action.CALL)
         player_id = game.round.game_pointer
         game.step(Action.RAISE_POT)
-        step_raised = game.round.raised[player_id]
+        step_raised = game.round.raised[player_id]  # type: ignore
         self.assertEqual(32, step_raised)
 
     def test_raise_half_pot(self):
@@ -173,12 +173,12 @@ class TestNolimitholdemMethods(unittest.TestCase):
 
         player_id = game.round.game_pointer
         game.step(Action.RAISE_HALF_POT)
-        step_raised = game.round.raised[player_id]
+        step_raised = game.round.raised[player_id]  # type: ignore
         self.assertEqual(4, step_raised)
 
         player_id = game.round.game_pointer
         game.step(Action.RAISE_HALF_POT)
-        step_raised = game.round.raised[player_id]
+        step_raised = game.round.raised[player_id]  # type: ignore
         self.assertEqual(5, step_raised)
 
     def test_payoffs_1(self):

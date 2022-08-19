@@ -66,16 +66,16 @@ class TestLeducholdemMethods(unittest.TestCase):
         players[1].in_chips = 10
 
         # Test hand is equal
-        players[0].hand = Card('S', 'J')
-        players[1].hand = Card('H', 'J')
+        players[0].hand = Card('S', 'J')  # type: ignore
+        players[1].hand = Card('H', 'J')  # type: ignore
         public_card = Card('S', 'Q')
         payoffs = Judger.judge_game(players, public_card)
         self.assertEqual(payoffs[0], 0)
         self.assertEqual(payoffs[1], 0)
 
         # Test one player get a pair
-        players[0].hand = Card('S', 'J')
-        players[1].hand = Card('S', 'Q')
+        players[0].hand = Card('S', 'J')  # type: ignore
+        players[1].hand = Card('S', 'Q')  # type: ignore
         public_card = Card('H', 'J')
         payoffs = Judger.judge_game(players, public_card)
         self.assertEqual(payoffs[0], 10.0)
@@ -83,8 +83,8 @@ class TestLeducholdemMethods(unittest.TestCase):
 
         # Other cases
         # Test one player get a pair
-        players[0].hand = Card('S', 'J')
-        players[1].hand = Card('S', 'Q')
+        players[0].hand = Card('S', 'J')  # type: ignore
+        players[1].hand = Card('S', 'Q')  # type: ignore
         public_card = Card('H', 'K')
         payoffs = Judger.judge_game(players, public_card)
         self.assertEqual(payoffs[0], -10.0)

@@ -22,10 +22,10 @@ class CFRAgent():
 
         # A policy is a dict state_str -> action probabilities
         self.policy = collections.defaultdict(list)
-        self.average_policy = collections.defaultdict(np.array)
+        self.average_policy = collections.defaultdict(np.array)  # type: ignore
 
         # Regret is a dict state_str -> action regrets
-        self.regrets = collections.defaultdict(np.array)
+        self.regrets = collections.defaultdict(np.array)  # type: ignore
 
         self.iteration = 0
 
@@ -101,7 +101,7 @@ class CFRAgent():
         ''' Update policy based on the current regrets
         '''
         for obs in self.regrets:
-            self.policy[obs] = self.regret_matching(obs)
+            self.policy[obs] = self.regret_matching(obs)  # type: ignore
 
     def regret_matching(self, obs):
         ''' Apply regret matching
@@ -137,7 +137,7 @@ class CFRAgent():
         '''
         if obs not in policy.keys():
             action_probs = np.array([1.0/self.env.num_actions for _ in range(self.env.num_actions)])
-            self.policy[obs] = action_probs
+            self.policy[obs] = action_probs  # type: ignore
         else:
             action_probs = policy[obs]
         action_probs = remove_illegal(action_probs, legal_actions)

@@ -8,7 +8,7 @@ import rlcard
 from rlcard.games.uno.card import UnoCard as Card
 
 # Read required docs
-ROOT_PATH = rlcard.__path__[0]
+ROOT_PATH = rlcard.__path__[0]  # type: ignore
 
 # a map of abstract action to its index and a list of abstract action
 with open(os.path.join(ROOT_PATH, 'games/uno/jsondata/action_space.json'), 'r') as file:
@@ -83,7 +83,7 @@ def hand2dict(hand):
             hand_dict[card] += 1
     return hand_dict
 
-def encode_hand(plane, hand):
+def encode_hand(hand):
     ''' Encode hand and represerve it into plane
 
     Args:
@@ -93,14 +93,14 @@ def encode_hand(plane, hand):
     Returns:
         (array): 3*4*15 numpy array
     '''
-    # plane = np.zeros((3, 4, 15), dtype=int)
+    plane = np.zeros((3, 4, 15), dtype=int)
     plane[0] = np.ones((4, 15), dtype=int)
     hand = hand2dict(hand) # 统计各种牌拥有张数
     for card, count in hand.items():
         card_info = card.split('-')
         color = COLOR_MAP[card_info[0]] # 获取当前牌的颜色
         trait = TRAIT_MAP[card_info[1]] # 获取当前牌的数字或种类
-        if trait >= 13: # 记录是否有万能牌 ❓
+        if trait >= 13: # 万能牌
             if plane[1][0][trait] == 0:
                 for index in range(4):
                     plane[0][index][trait] = 0
@@ -108,9 +108,9 @@ def encode_hand(plane, hand):
         else: #❗️tips 除万能牌外，同一个颜色的牌型最多有且仅有 2 张
             plane[0][color][trait] = 0
             plane[count][color][trait] = 1 
-    return plane
+    return plane.flatten()
 
-def encode_target(plane, target):
+def encode_target(target):
     ''' Encode target and represerve it into plane
 
     Args:
@@ -120,8 +120,28 @@ def encode_target(plane, target):
     Returns:
         (array): 1*4*15 numpy array
     '''
+    plane = np.zeros((4, 15), dtype=int)
     target_info = target.split('-')
     color = COLOR_MAP[target_info[0]]
     trait = TRAIT_MAP[target_info[1]]
     plane[color][trait] = 1
-    return plane
+    return plane.flatten()
+
+def encode_action(action, action_shape):
+    one_hot = np.zeros(action_shape, dtype=int)
+    if action != '':
+        one_hot[ACTION_SPACE[action]] = 1 # 获取当前 action 的 id
+    
+    return one_hot
+
+def encode_action_sequence(action_list, action_shape):
+    plane = np.zeros((len(action_list), action_shape), dtype=int)
+    for row, card in enumerate(action_list):
+        plane[row, :] = encode_action(card, action_shape)
+    return plane.flatten()
+
+def get_one_hot_array(num_left_cards, max_num_cards):
+    one_hot = np.zeros(max_num_cards, dtype=int)
+    one_hot[num_left_cards - 1] = 1
+    
+    return one_hot 

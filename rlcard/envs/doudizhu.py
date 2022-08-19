@@ -60,7 +60,7 @@ class DoudizhuEnv(Env):
             for i, action in reversed(state['trace']):
                 if i == 0:
                     last_landlord_action = action
-            last_landlord_action = _cards2array(last_landlord_action)
+            last_landlord_action = _cards2array(last_landlord_action)  # type: ignore
             landlord_num_cards_left = _get_one_hot_array(state['num_cards_left'][0], 20)
 
             teammate_id = 3 - state['self']
@@ -84,8 +84,8 @@ class DoudizhuEnv(Env):
 
         extracted_state = OrderedDict({'obs': obs, 'legal_actions': self._get_legal_actions()})
         extracted_state['raw_obs'] = state
-        extracted_state['raw_legal_actions'] = [a for a in state['actions']]
-        extracted_state['action_record'] = self.action_recorder
+        extracted_state['raw_legal_actions'] = [a for a in state['actions']]  # type: ignore
+        extracted_state['action_record'] = self.action_recorder  # type: ignore
         return extracted_state
             
     def get_payoffs(self):

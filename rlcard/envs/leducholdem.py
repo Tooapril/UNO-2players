@@ -27,7 +27,7 @@ class LeducholdemEnv(Env):
         self.state_shape = [[36] for _ in range(self.num_players)]
         self.action_shape = [None for _ in range(self.num_players)]
 
-        with open(os.path.join(rlcard.__path__[0], 'games/leducholdem/card2index.json'), 'r') as file:
+        with open(os.path.join(rlcard.__path__[0], 'games/leducholdem/card2index.json'), 'r') as file:  # type: ignore
             self.card2index = json.load(file)
 
     def _get_legal_actions(self):
@@ -104,7 +104,7 @@ class LeducholdemEnv(Env):
         state = {}
         state['chips'] = [self.game.players[i].in_chips for i in range(self.num_players)]
         state['public_card'] = self.game.public_card.get_index() if self.game.public_card else None
-        state['hand_cards'] = [self.game.players[i].hand.get_index() for i in range(self.num_players)]
+        state['hand_cards'] = [self.game.players[i].hand.get_index() for i in range(self.num_players)]  # type: ignore
         state['current_round'] = self.game.round_counter
         state['current_player'] = self.game.game_pointer
         state['legal_actions'] = self.game.get_legal_actions()

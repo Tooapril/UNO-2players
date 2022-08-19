@@ -36,7 +36,7 @@ class UNORuleAgentV1(object):
         for action in legal_actions:
             if action.split('-')[1] == 'wild_draw_4':
                 color_nums = self.count_colors(self.filter_wild(hand))
-                action = max(color_nums, key=color_nums.get) + '-wild_draw_4'
+                action = max(color_nums, key=color_nums.get) + '-wild_draw_4'  # type: ignore
                 return action
 
         # Without wild-4, we randomly choose one

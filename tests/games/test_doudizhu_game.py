@@ -92,7 +92,7 @@ class TestDoudizhuGame(unittest.TestCase):
         #players[current_player].played_cards should be the same
         self.assertEqual(game.players[game.round.current_player].played_cards, played_cards)
         #greater_player should be the same
-        self.assertEqual(game.round.greater_player.player_id, 0)
+        self.assertEqual(game.round.greater_player.player_id, 0)  # type: ignore
         actions.sort()
         game.state['actions'].sort()
         #actions should be the same after step_back()
@@ -115,14 +115,14 @@ class TestDoudizhuGame(unittest.TestCase):
         #players[current_player].played_cards should be the same
         self.assertEqual(game.players[game.round.current_player].played_cards, played_cards)
         #greater_player should be the same
-        self.assertEqual(game.round.greater_player.player_id, 0)
+        self.assertEqual(game.round.greater_player.player_id, 0)  # type: ignore
         actions.sort()
         game.state['actions'].sort()
         #actions should be the same after step_back()
         self.assertEqual(game.state['actions'], actions)
         game.step_back()
         #greater_player should be the same
-        self.assertEqual(game.round.greater_player.player_id, 0)
+        self.assertEqual(game.round.greater_player.player_id, 0)  # type: ignore
 
     def test_get_landlord_score(self):
         score_1 = get_landlord_score('56888TTQKKKAA222R')

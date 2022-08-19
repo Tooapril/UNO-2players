@@ -34,8 +34,8 @@ class TestNFSP(unittest.TestCase):
                           device=torch.device('cpu'))
 
         predicted_action, _ = agent.eval_step({'obs': np.random.random_sample((2,)), 'legal_actions': {0: None, 1: None}, 'raw_legal_actions': ['call', 'raise']})
-        self.assertGreaterEqual(predicted_action, 0)
-        self.assertLessEqual(predicted_action, 1)
+        self.assertGreaterEqual(predicted_action, 0)  # type: ignore
+        self.assertLessEqual(predicted_action, 1)  # type: ignore
 
         for _ in range(num_steps):
             agent.sample_episode_policy()

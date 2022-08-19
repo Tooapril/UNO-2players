@@ -42,12 +42,12 @@ class GinRummyEnv(Env):
             obs = np.array([self._utils.encode_cards([]) for _ in range(5)])
             extracted_state = {'obs': obs, 'legal_actions': self._get_legal_actions()}
         else:
-            discard_pile = self.game.round.dealer.discard_pile
-            stock_pile = self.game.round.dealer.stock_pile
+            discard_pile = self.game.round.dealer.discard_pile  # type: ignore
+            stock_pile = self.game.round.dealer.stock_pile  # type: ignore
             top_discard = [] if not discard_pile else [discard_pile[-1]]
             dead_cards = discard_pile[:-1]
             current_player = self.game.get_current_player()
-            opponent = self.game.round.players[(current_player.player_id + 1) % 2]
+            opponent = self.game.round.players[(current_player.player_id + 1) % 2]  # type: ignore
             known_cards = opponent.known_cards
             unknown_cards = stock_pile + [card for card in opponent.hand if card not in known_cards]
             hand_rep = self._utils.encode_cards(current_player.hand)

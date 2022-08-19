@@ -147,7 +147,7 @@ class DouDizhuRuleAgentV1(object):
                         str_chain = ''
                         for num in range(len(chain)):
                             str_chain += str_card[start+num]
-                            hand_list[start+num] = int(hand_list[start+num]) - int(min(chain))
+                            hand_list[start+num] = int(hand_list[start+num]) - int(min(chain))  # type: ignore
                         for _ in range(min_count):
                             chains.append(str_chain)
                 add += len(chain)

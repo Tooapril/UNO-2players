@@ -11,7 +11,7 @@ class ModelSpec(object):
             entry_point (string): a string that indicates the location of the model class
         '''
         self.model_id = model_id
-        mod_name, class_name = entry_point.split(':')
+        mod_name, class_name = entry_point.split(':')  # type: ignore
         self._entry_point = getattr(importlib.import_module(mod_name), class_name)
 
     def load(self):

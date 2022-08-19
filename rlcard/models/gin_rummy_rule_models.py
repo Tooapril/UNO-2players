@@ -9,8 +9,8 @@
 from typing import TYPE_CHECKING
 from collections import OrderedDict
 
-if TYPE_CHECKING:
-    from rlcard.core import Card
+# if TYPE_CHECKING:
+#     from rlcard.core import Card
 
 from typing import List
 
@@ -72,7 +72,7 @@ class GinRummyNoviceRuleAgent(object):
             if best_discards:
                 actions = [DiscardAction(card=card).action_id for card in best_discards]
         if type(actions) == OrderedDict:
-            actions = list(actions.keys())
+            actions = list(actions.keys())  # type: ignore
         return np.random.choice(actions)
 
     def eval_step(self, state):
@@ -101,7 +101,7 @@ class GinRummyNoviceRuleAgent(object):
             meld_clusters = melding.get_meld_clusters(hand=next_hand)
             deadwood_counts = []
             for meld_cluster in meld_clusters:
-                deadwood_count = utils.get_deadwood_count(hand=next_hand, meld_cluster=meld_cluster)
+                deadwood_count = utils.get_deadwood_count(hand=next_hand, meld_cluster=meld_cluster)  # type: ignore
                 deadwood_counts.append(deadwood_count)
             best_deadwood_count = min(deadwood_counts,
                                       default=utils.get_deadwood_count(hand=next_hand, meld_cluster=[]))

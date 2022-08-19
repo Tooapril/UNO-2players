@@ -1,3 +1,4 @@
+from sre_parse import State
 import unittest
 import numpy as np
 
@@ -47,7 +48,7 @@ class TestBlackjackGame(unittest.TestCase):
         while not game.is_over():
             action = np.random.choice(['hit', 'action'])
             state, _ = game.step(action)
-        self.assertEqual(len(state['state'][1]), len(game.dealer.hand))
+        self.assertEqual(len(State['state'][1]), len(game.dealer.hand))  # type: ignore
 
     def test_step_back(self):
         game = Game(allow_step_back=True)

@@ -82,7 +82,7 @@ class TestUnoMethods(unittest.TestCase):
     def test_encode_hand(self):
         hand1 = ['y-1', 'r-8', 'b-9', 'y-reverse', 'r-skip']
         encoded_hand1 = np.zeros((3, 4, 15), dtype=int)
-        encode_hand(encoded_hand1, hand1)
+        encode_hand(encoded_hand1, hand1)  # type: ignore
         for index in range(15):
             total = 0
             for color in range(4):
@@ -90,7 +90,7 @@ class TestUnoMethods(unittest.TestCase):
             self.assertEqual(total, 4)
         hand2 = ['r-wild', 'g-wild_draw_4']
         encoded_hand2 = np.zeros((3, 4, 15), dtype=int)
-        encode_hand(encoded_hand2, hand2)
+        encode_hand(encoded_hand2, hand2)  # type: ignore
         for color in range(4):
             self.assertEqual(encoded_hand2[1][color][-2], 1)
             self.assertEqual(encoded_hand2[1][color][-1], 1)
@@ -98,7 +98,7 @@ class TestUnoMethods(unittest.TestCase):
     def test_encode_target(self):
         encoded_target = np.zeros((4, 15), dtype=int)
         target = 'r-1'
-        encode_target(encoded_target, target)
+        encode_target(encoded_target, target)  # type: ignore
         self.assertEqual(encoded_target[0][1], 1)
 
     def test_player_get_player_id(self):

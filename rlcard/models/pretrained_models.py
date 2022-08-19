@@ -7,7 +7,7 @@ from rlcard.agents import CFRAgent
 from rlcard.models.model import Model
 
 # Root path of pretrianed models
-ROOT_PATH = os.path.join(rlcard.__path__[0], 'models/pretrained')
+ROOT_PATH = os.path.join(rlcard.__path__[0], 'models/pretrained')  # type: ignore
 
 class LeducHoldemCFRModel(Model):
     ''' A pretrained model on Leduc Holdem with CFR (chance sampling)

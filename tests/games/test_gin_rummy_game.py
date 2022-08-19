@@ -43,15 +43,15 @@ class TestGinRummyGame(unittest.TestCase):
         game = Game()
         state, current_player = game.init_game()
         opponent_player = (current_player + 1) % 2
-        self.assertEqual(len(game.round.move_sheet), 1)
+        self.assertEqual(len(game.round.move_sheet), 1)  # type: ignore
         self.assertIn(current_player, [0, 1])
-        self.assertIn(game.round.dealer_id, [0, 1])
-        self.assertEqual(len(game.actions), 0)
-        self.assertEqual(opponent_player, game.round.dealer_id)  # opponent_player is dealer
-        self.assertEqual(len(game.round.players[opponent_player].hand), 10)  # dealer has 10 cards
-        self.assertEqual(len(game.round.players[current_player].hand), 11)  # current_player has 11 cards
-        self.assertEqual(len(game.round.dealer.shuffled_deck), 52)
-        self.assertEqual(len(game.round.dealer.stock_pile), 31)
+        self.assertIn(game.round.dealer_id, [0, 1])  # type: ignore
+        self.assertEqual(len(game.actions), 0)  # type: ignore
+        self.assertEqual(opponent_player, game.round.dealer_id)  # type: ignore  # opponent_player is dealer
+        self.assertEqual(len(game.round.players[opponent_player].hand), 10)  # type: ignore  # dealer has 10 cards
+        self.assertEqual(len(game.round.players[current_player].hand), 11)  # type: ignore  # current_player has 11 cards
+        self.assertEqual(len(game.round.dealer.shuffled_deck), 52)  # type: ignore
+        self.assertEqual(len(game.round.dealer.stock_pile), 31)  # type: ignore
         self.assertEqual(state['player_id'], current_player)
         self.assertEqual(len(state['hand']), 11)
 
@@ -59,13 +59,13 @@ class TestGinRummyGame(unittest.TestCase):
         game = Game()
         _, current_player = game.init_game()
         opponent_player = (current_player + 1) % 2
-        action = np.random.choice(game.judge.get_legal_actions())
+        action = np.random.choice(game.judge.get_legal_actions())  # type: ignore
         self.assertIn(action.action_id, put_action_ids)  # should be a put action
         _, next_player = game.step(action)
         if not game.is_over():
             self.assertEqual(next_player, opponent_player)
         if not game.is_over():
-            action = np.random.choice(game.judge.get_legal_actions())
+            action = np.random.choice(game.judge.get_legal_actions())  # type: ignore
             self.assertIn(action.action_id, get_action_ids)  # should be a get action
             _, next_player = game.step(action)
             self.assertEqual(next_player, opponent_player)  # keep turn to put card
@@ -75,9 +75,9 @@ class TestGinRummyGame(unittest.TestCase):
         game.init_game()
         while not game.is_over():
             legal_actions = game.judge.get_legal_actions()
-            action = np.random.choice(legal_actions)
+            action = np.random.choice(legal_actions)  # type: ignore
             _, _ = game.step(action)
-        self.assertEqual(game.actions[-1].action_id, score_player_1_action_id)
+        self.assertEqual(game.actions[-1].action_id, score_player_1_action_id)  # type: ignore
 
     def test_get_state(self):
         game = Game()

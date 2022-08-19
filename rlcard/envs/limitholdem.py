@@ -26,7 +26,7 @@ class LimitholdemEnv(Env):
         self.state_shape = [[72] for _ in range(self.num_players)]
         self.action_shape = [None for _ in range(self.num_players)]
 
-        with open(os.path.join(rlcard.__path__[0], 'games/limitholdem/card2index.json'), 'r') as file:
+        with open(os.path.join(rlcard.__path__[0], 'games/limitholdem/card2index.json'), 'r') as file:  # type: ignore
             self.card2index = json.load(file)
 
     def _get_legal_actions(self):
