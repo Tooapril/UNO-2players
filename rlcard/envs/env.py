@@ -24,7 +24,7 @@ class Env(object):
                 'rlcard/envs/blackjack.py'
                 TODO: Support more game configurations in the future.
         '''
-        self.allow_step_back = self.game.allow_step_back = config['allow_step_back']  # type: ignore  # type: ignore
+        self.allow_step_back = self.game.allow_step_back = config['allow_step_back']  # type: ignore
         self.action_recorder = []
 
         # Game specific configurations
@@ -32,7 +32,7 @@ class Env(object):
         # TODO support game configurations for all the games
         supported_envs = ['blackjack', 'leduc-holdem', 'limit-holdem', 'no-limit-holdem']
         if self.name in supported_envs: # type: ignore # 将 config 的配置替换 default_game_config
-            _game_config = self.default_game_config.copy()  # type: ignore  # type: ignore
+            _game_config = self.default_game_config.copy()  # type: ignore
             for key in config:
                 if key in _game_config:
                     _game_config[key] = config[key]

@@ -127,17 +127,32 @@ def encode_target(target):
     plane[color][trait] = 1
     return plane.flatten()
 
-def encode_action(action, action_shape):
-    one_hot = np.zeros(action_shape, dtype=int)
-    if action != '':
-        one_hot[ACTION_SPACE[action]] = 1 # 获取当前 action 的 id
+def encode_action(action):
+    plane = np.zeros((4, 3), dtype=int)
+    draw = np.zeros(1, dtype=int)
     
-    return one_hot
+    if action == '' or action == 'pass':
+        return np.zeros(13, dtype=int)
+    
+    if action == 'draw':
+        draw = np.ones(1, dtype=int)
+    else:
+        target_info = action.split('-')
+        color = COLOR_MAP[target_info[0]]
+        trait = TRAIT_MAP[target_info[1]]
+        if trait < 10: # 数字牌
+            plane[color][0] = 1
+        elif trait < 13: # 功能牌
+            plane[color][1] = 1
+        else: # 万能牌
+            plane[color][2] = 1
+    
+    return np.concatenate((plane.flatten(), draw))
 
-def encode_action_sequence(action_list, action_shape):
-    plane = np.zeros((len(action_list), action_shape), dtype=int)
+def encode_action_sequence(action_list, size=13):
+    plane = np.zeros((len(action_list), size), dtype=int)
     for row, card in enumerate(action_list):
-        plane[row, :] = encode_action(card, action_shape)
+        plane[row, :] = encode_action(card)
     return plane.flatten()
 
 def get_one_hot_array(num_left_cards, max_num_cards):
