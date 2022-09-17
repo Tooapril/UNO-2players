@@ -18,7 +18,7 @@ class UnoEnv(Env):
         self.default_game_config = DEFAULT_GAME_CONFIG
         self.game = Game()
         super().__init__(config)
-        self.state_shape = [[750] for _ in range(self.num_players)]
+        self.state_shape = [[770] for _ in range(self.num_players)]
         self.action_shape = [None for _ in range(self.num_players)]
 
     def _extract_state(self, state):
@@ -57,8 +57,7 @@ class UnoEnv(Env):
         legal_ids = self._get_legal_actions()
         if action_id in legal_ids:
             return ACTION_LIST[action_id]
-        # if (len(self.game.dealer.deck) + len(self.game.round.played_cards)) > 17:
-        #    return ACTION_LIST[60]
+        
         return ACTION_LIST[np.random.choice(legal_ids)]  # type: ignore
 
     def _get_legal_actions(self):

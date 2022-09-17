@@ -26,6 +26,7 @@ class UnoRound:
         self.action = None
         self.draw_player = None
         self.draw_card = None
+        self.last_target = None
 
     def flip_top_card(self):
         ''' Flip the top card of the card pile
@@ -49,14 +50,14 @@ class UnoRound:
             top_card (object): object of UnoCard
         '''
         if top_card.trait == 'skip': # 首牌为 ‘跳过’
-            self.current_player = self._perform_pass_action()
+            self.current_player = (self.current_player + self.direction) % self.num_players
         if top_card.trait == 'reverse': # 首牌为 ‘反转’
             self.direction = -1
-            self.current_player = self._perform_pass_action()
+            self.current_player = (self.current_player + self.direction) % self.num_players
         elif top_card.trait == 'draw_2': # 首牌为 ‘+2’
             player = players[self.current_player]
             self.dealer.deal_cards(player, 2)
-            self.current_player = self._perform_pass_action()
+            self.current_player = (self.current_player + self.direction) % self.num_players
 
     def proceed_round(self, players, action):
         ''' Call other Classes's functions to keep one round running
@@ -72,7 +73,10 @@ class UnoRound:
             self._perform_draw_action(players)
             return None
         elif action == 'pass':
-            self.current_player = self._perform_pass_action()
+            self._perform_pass_action(players)
+            return None
+        elif action == 'query':
+            self._perform_query_action(players)
             return None
 
         player = players[self.current_player]
@@ -99,7 +103,7 @@ class UnoRound:
 
         # perform the number action —— 执行当前 action（数字牌）
         if card.type == 'number':
-            self.current_player = self._perform_pass_action()
+            self.current_player = (self.current_player + self.direction) % self.num_players
             self.target = card
 
         # perform the wild action —— 执行当前 action（万能牌）
@@ -114,12 +118,14 @@ class UnoRound:
         wild_flag = 0
         wild_draw_4_flag = 0
         legal_actions = []
-        wild_4_actions = []
         hand = players[player_id].hand
         target = self.target
         draw_card = self.draw_card
-
-        if self.action == 'draw' and self.draw_player == self.current_player:
+        
+        if self.action in WILD_DRAW_4:  # type: ignore
+            legal_actions.append('query')
+            legal_actions.append("pass")
+        elif self.action == 'draw' and self.draw_player == self.current_player:
             if draw_card.trait == 'wild_draw_4':  # type: ignore
                 legal_actions.extend(WILD_DRAW_4)
             elif draw_card.trait == 'wild':  # type: ignore
@@ -128,34 +134,18 @@ class UnoRound:
                 legal_actions.append(draw_card.str)  # type: ignore
             legal_actions.append('pass')
         else:
-            if target.type == 'wild':  # type: ignore
-                for card in hand: # 记录当前玩家可出牌型
-                    if card.type == 'wild':
-                        if card.trait == 'wild_draw_4': # 当前手牌内有 ‘+4’
-                            if wild_draw_4_flag == 0:
-                                wild_draw_4_flag = 1
-                                legal_actions.extend(WILD_DRAW_4)
-                        else: # 当前手牌有 ‘换色’
-                            if wild_flag == 0:
-                                wild_flag = 1
-                                legal_actions.extend(WILD)
-                    elif card.color == target.color:  # type: ignore # 当前手牌有 可出的数字牌
-                        legal_actions.append(card.str)
-
-            # target is aciton card or number card
-            else:
-                for card in hand:
-                    if card.type == 'wild':
-                        if card.trait == 'wild_draw_4': # 当前手牌内有 ‘+4’
-                            if wild_draw_4_flag == 0:
-                                wild_draw_4_flag = 1
-                                legal_actions.extend(WILD_DRAW_4)
-                        else: # 当前手牌有 ‘换色’
-                            if wild_flag == 0:
-                                wild_flag = 1
-                                legal_actions.extend(WILD)
-                    elif card.color == target.color or card.trait == target.trait:  # type: ignore # 当前手牌有 可出的数字牌或功能牌
-                        legal_actions.append(card.str)
+            for card in hand: # 记录当前玩家可出牌型
+                if card.type == 'wild':
+                    if card.trait == 'wild_draw_4': # 当前手牌内有 ‘+4’
+                        if wild_draw_4_flag == 0:
+                            wild_draw_4_flag = 1
+                            legal_actions.extend(WILD_DRAW_4)
+                    else: # 当前手牌有 ‘换色’
+                        if wild_flag == 0:
+                            wild_flag = 1
+                            legal_actions.extend(WILD)
+                elif card.color == target.color or card.trait == target.trait:  # type: ignore # 当前手牌有 可出的数字牌或功能牌
+                    legal_actions.append(card.str)
             legal_actions.append('draw')
             
         return legal_actions
@@ -224,7 +214,13 @@ class UnoRound:
         elif card.type == 'wild':
             return None
         # draw a card with the diffrent color of target —— 抽牌（其他牌）
-        self.current_player = self._perform_pass_action()
+        self.current_player = (self.current_player + self.direction) % self.num_players
+
+    def is_legal_query(self, hand, target):
+        for card in hand: # 只负责检查打出 ‘+4’ 牌的玩家手上有无同颜色的牌型
+            if card.color == target.color:  # type: ignore # 当前手牌有 可出的同色牌
+                return True
+        return False
 
     def _perform_draw_action(self, players):
         # replace deck if there is no card in draw pile
@@ -240,9 +236,39 @@ class UnoRound:
         
         self.is_draw_available(self.draw_card) # 如果抽牌不合法，则置玩家为下一玩家
 
-    def _perform_pass_action(self):
-        return (self.current_player + self.direction) % self.num_players
+    def _perform_pass_action(self, players):
+        if self.target.trait == 'wild_draw_4':  # type: ignore
+            if len(self.dealer.deck) < 4:
+                # 游戏循环：从已出牌型中重新洗牌抽牌
+                # self.replace_deck()
+                # 游戏结束：统计所有玩家当前牌值
+                self.is_over = True
+                return None
+            self.dealer.deal_cards(players[self.current_player], 4)
+        self.current_player = (self.current_player + self.direction) % self.num_players
 
+    def _perform_query_action(self, players):
+        last_player = players[(self.current_player - self.direction) % self.num_players]
+        
+        # 质疑后分为质疑成功和质疑失败操作
+        if self.is_legal_query(last_player.hand, self.last_target): # 质疑成功
+            if len(self.dealer.deck) < 4:
+                    # 游戏循环：从已出牌型中重新洗牌抽牌
+                    # self.replace_deck()
+                    # 游戏结束：统计所有玩家当前牌值
+                    self.is_over = True
+                    return None
+            self.dealer.deal_cards(last_player, 4)
+        else: # 质疑失败
+            if len(self.dealer.deck) < 6:
+                    # 游戏循环：从已出牌型中重新洗牌抽牌
+                    # self.replace_deck()
+                    # 游戏结束：统计所有玩家当前牌值
+                    self.is_over = True
+                    return None
+            self.dealer.deal_cards(players[self.current_player], 6)
+            self.current_player = (self.current_player + self.direction) % self.num_players
+        
     def _preform_non_number_action(self, players, card):
         current = self.current_player
         direction = self.direction
@@ -267,15 +293,19 @@ class UnoRound:
             self.dealer.deal_cards(players[(current + direction) % num_players], 2)
             current = (current + direction) % num_players
 
-        # perfrom wild_draw_4 card —— ‘+4’操作，
-        elif card.trait == 'wild_draw_4': # 当牌盒内的牌不够时
-            if len(self.dealer.deck) < 4:
-                # 游戏循环：从已出牌型中重新洗牌抽牌
-                # self.replace_deck()
-                # 游戏结束：统计所有玩家当前牌值
-                self.is_over = True
-                return None
-            self.dealer.deal_cards(players[(current + direction) % num_players], 4)
-            current = (current + direction) % num_players
+        # perfrom wild_draw_4 card —— ‘+4’操作
+        elif card.trait == 'wild_draw_4':
+            self.last_target = self.target
+        
+        # elif card.trait == 'wild_draw_4': # 当牌盒内的牌不够时
+        #     if len(self.dealer.deck) < 4:
+        #         # 游戏循环：从已出牌型中重新洗牌抽牌
+        #         # self.replace_deck()
+        #         # 游戏结束：统计所有玩家当前牌值
+        #         self.is_over = True
+        #         return None
+        #     self.dealer.deal_cards(players[(current + direction) % num_players], 4)
+        #     current = (current + direction) % num_players
+            
         self.current_player = (current + self.direction) % num_players
         self.target = card

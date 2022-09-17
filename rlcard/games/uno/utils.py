@@ -129,13 +129,15 @@ def encode_target(target):
 
 def encode_action(action):
     plane = np.zeros((4, 3), dtype=int)
-    draw = np.zeros(1, dtype=int)
+    other_actions = np.zeros(2, dtype=int) # 记录 draw 和 query 动作
     
     if action == '' or action == 'pass':
-        return np.zeros(13, dtype=int)
+        return np.zeros(14, dtype=int)
     
     if action == 'draw':
-        draw = np.ones(1, dtype=int)
+        other_actions[0] = 1
+    elif action == 'query':
+        other_actions[1] = 1
     else:
         target_info = action.split('-')
         color = COLOR_MAP[target_info[0]]
@@ -147,9 +149,9 @@ def encode_action(action):
         else: # 万能牌
             plane[color][2] = 1
     
-    return np.concatenate((plane.flatten(), draw))
+    return np.concatenate((plane.flatten(), other_actions))
 
-def encode_action_sequence(action_list, size=13):
+def encode_action_sequence(action_list, size=14):
     plane = np.zeros((len(action_list), size), dtype=int)
     for row, card in enumerate(action_list):
         plane[row, :] = encode_action(card)
