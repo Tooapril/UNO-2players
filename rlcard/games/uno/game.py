@@ -151,7 +151,7 @@ class UnoGame:
         ''' Return the number of applicable actions
 
         Returns:
-            (int): The number of actions. There are 62 actions
+            (int): The number of actions. There are 63 actions
         '''
         return 63
 

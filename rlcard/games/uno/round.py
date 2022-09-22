@@ -51,7 +51,7 @@ class UnoRound:
         '''
         if top_card.trait == 'skip': # 首牌为 ‘跳过’
             self.current_player = (self.current_player + self.direction) % self.num_players
-        if top_card.trait == 'reverse': # 首牌为 ‘反转’
+        elif top_card.trait == 'reverse': # 首牌为 ‘反转’
             self.direction = -1
             self.current_player = (self.current_player + self.direction) % self.num_players
         elif top_card.trait == 'draw_2': # 首牌为 ‘+2’
