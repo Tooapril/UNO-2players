@@ -11,8 +11,9 @@ class UnoJudger:
         Returns:
             (list): The player id of the winner
         '''
-        winner = []
-        for index, payoff in enumerate(payoffs):
-            if payoff == max(payoffs):
-                winner.append(index)
-        return winner
+        if payoffs[0] > payoffs[1]:
+            return [0]
+        elif payoffs[0] < payoffs[1]:
+            return [1]
+        else:
+            return None

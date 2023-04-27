@@ -7,21 +7,17 @@ import rlcard
 from rlcard.agents import DQNAgent, RandomAgent
 from rlcard.utils import get_device, set_seed, tournament
 
-def load_model(model_path, env, position=None, device=None):
+def load_model(model_path, env=None, position=None, device=None):
     if os.path.isfile(model_path):  # Torch model
         import torch
         agent = torch.load(model_path, map_location=device)
         agent.set_device(device)
-    elif os.path.isdir(model_path):  # CFR model
-        from rlcard.agents import CFRAgent
-        agent = CFRAgent(env, model_path)
-        agent.load()
     elif model_path == 'random':  # Random model
         from rlcard.agents import RandomAgent
-        agent = RandomAgent(num_actions=env.num_actions)
+        agent = RandomAgent(num_actions=env.num_actions)  # type: ignore
     else:  # A model in the model zoo
         from rlcard import models
-        agent = models.load(model_path).agents[position]
+        agent = models.load(model_path).agents[position] # 'uno-rule-v1'
     
     return agent
 
@@ -51,8 +47,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("Evaluation example in RLCard")
     parser.add_argument('--env', type=str, default='uno',
             choices=['blackjack', 'leduc-holdem', 'limit-holdem', 'doudizhu', 'mahjong', 'no-limit-holdem', 'uno', 'gin-rummy'])
-    parser.add_argument('--models', nargs='*', default=['experiments/uno/dqn/model.pth', 'random'])
-    parser.add_argument('--cuda', type=str, default='')
+    parser.add_argument('--models', nargs='*', default=['experiments/uno/dmc/0_0.pth', 'random'])
+    parser.add_argument('--cuda', type=str, default='1')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--num_games', type=int, default=10000)
     args = parser.parse_args()

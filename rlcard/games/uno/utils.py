@@ -1,10 +1,10 @@
-import os
 import json
-import numpy as np
+import os
 from collections import OrderedDict
 
-import rlcard
+import numpy as np
 
+import rlcard
 from rlcard.games.uno.card import UnoCard as Card
 
 # Read required docs
@@ -108,7 +108,13 @@ def encode_hand(hand):
         else: #❗️tips 除万能牌外，同一个颜色的牌型最多有且仅有 2 张
             plane[0][color][trait] = 0
             plane[count][color][trait] = 1 
-    return plane.flatten()
+    
+    plane2 = np.zeros((4, 12), dtype=int)
+    for i in range(4):
+        plane2[i] = plane[2][i][1:13]
+    
+    return np.concatenate((plane[:2][:][:].flatten(), plane2.flatten()))
+
 
 def encode_target(target):
     ''' Encode target and represerve it into plane
@@ -128,39 +134,37 @@ def encode_target(target):
     return plane.flatten()
 
 def encode_action(action):
-    plane = np.zeros((4, 3), dtype=int)
-    other_actions = np.zeros(3, dtype=int) # 记录 draw 和 query 动作
-    
     if action == '':
-        return np.zeros(15, dtype=int)
+        return np.zeros(63, dtype=int)
+    
+    plane = np.zeros((4, 15), dtype=int)
+    other_actions = np.zeros(3, dtype=int) # 记录 draw query pass 动作
     
     if action == 'draw':
         other_actions[0] = 1
-    elif action == 'pass':
-        other_actions[1] = 1
     elif action == 'query':
+        other_actions[1] = 1
+    elif action == 'pass':
         other_actions[2] = 1
     else:
         target_info = action.split('-')
         color = COLOR_MAP[target_info[0]]
         trait = TRAIT_MAP[target_info[1]]
-        if trait < 10: # 数字牌
-            plane[color][0] = 1
-        elif trait < 13: # 功能牌
-            plane[color][1] = 1
-        else: # 万能牌
-            plane[color][2] = 1
+        plane[color][trait] = 1
     
     return np.concatenate((plane.flatten(), other_actions))
 
-def encode_action_sequence(action_list, size=15):
+def encode_action_sequence(action_list, size=63):
     plane = np.zeros((len(action_list), size), dtype=int)
     for row, card in enumerate(action_list):
         plane[row, :] = encode_action(card)
-    return plane.flatten()
+    plane = plane.reshape(4, 126)
+    return plane
 
-def get_one_hot_array(num_left_cards, max_num_cards):
+def get_one_hot_array(num_left_cards, max_num_cards=10):
     one_hot = np.zeros(max_num_cards, dtype=int)
-    one_hot[num_left_cards - 1] = 1
-    
+    if num_left_cards > max_num_cards:
+        one_hot[max_num_cards - 1] = 1
+    else:
+        one_hot[num_left_cards - 1] = 1
     return one_hot 

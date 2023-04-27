@@ -1,8 +1,9 @@
+import numpy as np
+
 from rlcard.games.uno.card import UnoCard
 from rlcard.games.uno.judger import UnoJudger
-from rlcard.games.uno.utils import cards2list, WILD, WILD_DRAW_4
+from rlcard.games.uno.utils import WILD, WILD_DRAW_4, cards2list
 
-import numpy as np
 
 class UnoRound:
 
@@ -51,7 +52,7 @@ class UnoRound:
         '''
         if top_card.trait == 'skip': # 首牌为 ‘跳过’
             self.current_player = (self.current_player + self.direction) % self.num_players
-        elif top_card.trait == 'reverse': # 首牌为 ‘反转’
+        if top_card.trait == 'reverse': # 首牌为 ‘反转’
             self.direction = -1
             self.current_player = (self.current_player + self.direction) % self.num_players
         elif top_card.trait == 'draw_2': # 首牌为 ‘+2’
@@ -170,7 +171,7 @@ class UnoRound:
             state['num_cards'].append(len(player.hand))
         return state
 
-    def get_payoffs(self, players):
+    def get_scores(self, players):
         '''Get player's payoffs'''
         # 计分策略：取二、三、四名游戏结束时的手牌分总和正数与第一名的手牌分相加
         winner_payoffs = 0
@@ -182,8 +183,29 @@ class UnoRound:
         if self.winner is None:
             self.winner = UnoJudger.judge_winner(self.payoffs)
         
-        for i in self.winner:
-            self.payoffs[i] += winner_payoffs
+        if self.winner is not None and len(self.winner) == 1:
+            self.payoffs[self.winner[0]] += winner_payoffs
+        # 平局， 奖励值均为各自手牌分
+        
+        return self.payoffs
+
+    def get_payoffs(self, players):
+        '''Get player's payoffs'''
+        # 计分策略：取二、三、四名游戏结束时的手牌分总和正数与第一名的手牌分相加
+        for index, player in enumerate(players):
+            self.payoffs[index] = self.count_hand_score(player.hand)
+            
+        if self.winner is None:
+            self.winner = UnoJudger.judge_winner(self.payoffs)
+        
+        for index, _ in enumerate(self.payoffs):
+            if not self.winner: # 平局时，奖励值均为 0
+                self.payoffs[index] = 0
+            elif index in self.winner:
+                self.payoffs[index] = 1
+            else:
+                self.payoffs[index] = -1
+                
         return self.payoffs
 
     def count_hand_score(self, cards):
@@ -297,15 +319,5 @@ class UnoRound:
         elif card.trait == 'wild_draw_4':
             self.last_target = self.target
         
-        # elif card.trait == 'wild_draw_4': # 当牌盒内的牌不够时
-        #     if len(self.dealer.deck) < 4:
-        #         # 游戏循环：从已出牌型中重新洗牌抽牌
-        #         # self.replace_deck()
-        #         # 游戏结束：统计所有玩家当前牌值
-        #         self.is_over = True
-        #         return None
-        #     self.dealer.deal_cards(players[(current + direction) % num_players], 4)
-        #     current = (current + direction) % num_players
-            
         self.current_player = (current + self.direction) % num_players
         self.target = card

@@ -112,13 +112,13 @@ class UnoGame:
             (list): Each entry corresponds to the payoff of one player
         '''
         # 使用简单的赢者置为 1 作为 payoffs
-        winner = self.round.winner
-        if winner is not None and len(winner) == 1:
-            self.payoffs[winner[0]] = 1
-            for index, _ in enumerate(self.payoffs):
-                if index != winner[0]:
-                    self.payoffs[index] = -1
-        return self.payoffs
+        # winner = self.round.winner   
+        # if winner is not None and len(winner) == 1:
+        #     self.payoffs[winner[0]] = 1
+        #     for index, _ in enumerate(self.payoffs):
+        #         if index != winner[0]:
+        #             self.payoffs[index] = -1
+        return self.round.get_payoffs(self.players)
     
     def get_scores(self):
         ''' Return the scores of the game
@@ -127,7 +127,7 @@ class UnoGame:
             (list): Each entry corresponds to the score of one player
         '''
         
-        return self.round.get_payoffs(self.players)
+        return self.round.get_scores(self.players)
 
     def get_legal_actions(self):
         ''' Return the legal actions for current player
@@ -151,7 +151,7 @@ class UnoGame:
         ''' Return the number of applicable actions
 
         Returns:
-            (int): The number of actions. There are 63 actions
+            (int): The number of actions. There are 62 actions
         '''
         return 63
 

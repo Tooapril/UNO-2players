@@ -1,18 +1,32 @@
-''' A toy example of playing against pretrianed AI on Leduc Hold'em
+''' A toy example of playing against rule-based bot on UNO
 '''
+
+import os
+
+import torch
 
 import rlcard
 from rlcard import models
-from rlcard.agents import LeducholdemHumanAgent as HumanAgent
-from rlcard.utils import print_card
+from rlcard.agents.human_agents.uno_human_agent import (HumanAgent,
+                                                        _print_action)
+from rlcard.utils import get_device
+
+# use cuda 1
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+
+# get device
+device = get_device()
 
 # Make environment
-env = rlcard.make('leduc-holdem')
-human_agent = HumanAgent(env.num_actions)
-cfr_agent = models.load('leduc-holdem-cfr').agents[0]
-env.set_agents([human_agent, cfr_agent])
+env = rlcard.make('uno')
 
-print(">> Leduc Hold'em pre-trained model")
+# Load models
+human_agent = HumanAgent(env.num_actions)
+dmc_agent = torch.load('experiments/uno/dmc/v3.1.0/1_727475200.pth', map_location=device)
+dmc_agent.set_device(device)
+env.set_agents([human_agent, dmc_agent])
+
+print(">> UNO DMC Model")
 
 while (True):
     print(">> Start a new game")
@@ -29,19 +43,14 @@ while (True):
             break
         _action_list.insert(0, action_record[-i])
     for pair in _action_list:
-        print('>> Player', pair[0], 'chooses', pair[1])
-
-    # Let's take a look at what the agent card is
-    print('===============     CFR Agent    ===============')
-    print_card(env.get_perfect_information()['hand_cards'][1])
+        print('>> Player', pair[0], 'chooses ', end='')
+        _print_action(pair[1])
+        print('')
 
     print('===============     Result     ===============')
     if payoffs[0] > 0:
-        print('You win {} chips!'.format(payoffs[0]))
-    elif payoffs[0] == 0:
-        print('It is a tie.')
+        print('You win!')
     else:
-        print('You lose {} chips!'.format(-payoffs[0]))
+        print('You lose!')
     print('')
-
     input("Press any key to continue...")
