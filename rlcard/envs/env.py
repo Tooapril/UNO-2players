@@ -165,9 +165,11 @@ class Env(object):
 
         # Payoffs
         if not is_training: # 非训练模式，获取胜负情况
-            payoffs = self.get_payoffs() # 计算对应玩家游戏结果（胜、平、负）
+            # payoffs = self.get_payoffs() # 计算对应玩家游戏结果（胜、平、负） WP
+            payoffs = self.get_scores() # 计算对应玩家5的分数 ADP
         else: # 训练模式，获取奖励值
-            payoffs = self.get_scores()
+            # payoffs = self.get_scores() # 以带权的胜率进行训练 ADP
+            payoffs = self.get_payoffs() # 以胜率为奖励值训练 WP
             
         return trajectories, payoffs
 

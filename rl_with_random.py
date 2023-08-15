@@ -6,7 +6,7 @@ import argparse
 import torch
 
 import rlcard
-from rlcard.agents import RandomAgent, DQNAgent, NFSPAgent
+from rlcard.agents import RandomAgent, DQNAgent
 from rlcard.utils import get_device, set_seed, tournament, reorganize, Logger, plot_curve
 
 def train(args):
@@ -22,37 +22,19 @@ def train(args):
 
     # Initialize the agent and use random agents as opponents
     agents = [[None] for _ in range(env.num_players)]
-    if args.algorithm == 'dqn':
-        agents[args.position] = DQNAgent(   # type: ignore
-                                    num_actions=env.num_actions,
-                                    state_shape=env.state_shape[args.position],
-                                    mlp_layers=[512,512,512,512,512],
-                                    device=device,
-                                )
-        agents[1 - args.position] = DQNAgent(   # type: ignore
-                                    num_actions=env.num_actions,
-                                    state_shape=env.state_shape[args.position],
-                                    mlp_layers=[512,512,512,512,512],
-                                    device=device,
-                                )
-    elif args.algorithm == 'nfsp':
-        agents[args.position] = NFSPAgent(  # type: ignore
+    agents[args.position] = DQNAgent(   # type: ignore
                                 num_actions=env.num_actions,
                                 state_shape=env.state_shape[args.position],
-                                hidden_layers_sizes=[64,64],
-                                q_mlp_layers=[64,64],
+                                mlp_layers=[512,512,512,512,512],
                                 device=device,
                             )
-        agents[1 - args.position] = RandomAgent(num_actions=env.num_actions)  # type: ignore
+    agents[1 - args.position] =  RandomAgent(num_actions=env.num_actions)  # type: ignore
     env.set_agents(agents)
 
     # Start training
     with Logger(args.log_dir) as logger:
         for episode in range(args.num_episodes):
 
-            if args.algorithm == 'nfsp':
-                agents[0].sample_episode_policy()  # type: ignore
-                
             # Generate data from the environment
             trajectories, payoffs = env.run(is_training=True)
 

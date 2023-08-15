@@ -1,6 +1,7 @@
 import numpy as np
 
 from rlcard.games.base import Card
+from rlcard.utils.localzoom import LocalZoomPlot
 
 def set_seed(seed):
     if seed is not None:
@@ -222,6 +223,84 @@ def tournament(env, num):
     return payoffs
 
 def plot_curve(csv_path, save_path, algorithm, position):
+    ''' Read data from csv file and plot the results
+    '''
+    import os
+    import csv
+    import matplotlib.pyplot as plt
+    with open(csv_path) as csvfile:
+        reader = csv.DictReader(csvfile)
+        xs = []
+        ys = []
+        for row in reader:
+            xs.append(int(row['timestep']))
+            ys.append(float(row['reward']))
+        fig, ax = plt.subplots()
+        ax.plot(xs, ys, label=algorithm+str(position))
+        ax.set(xlabel='Training steps', ylabel='Winning rate')
+        ax.legend()
+        ax.grid()
+
+        save_dir = os.path.dirname(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        fig.savefig(save_path)
+
+def plot_test(save_path):
+    import plotly.io as pio
+    import plotly.graph_objects as go
+    
+    # 设置plotly默认主题，白色主题
+    pio.templates.default = 'plotly_white'
+    
+    # x坐标
+    x = np.arange(1, 1001)
+
+    # 生成y轴数据，并添加随机波动
+    y1 = np.log(x)
+    indexs = np.random.randint(0, 1000, 800)
+    for index in indexs:
+        y1[index] += np.random.rand() - 0.5
+    y1 = y1 + 0.2
+
+    y2 = np.log(x)
+    indexs = np.random.randint(0, 1000, 800)
+    for index in indexs:
+        y2[index] += np.random.rand() - 0.5
+
+    y3 = np.log(x)
+    indexs = np.random.randint(0, 1000, 800)
+    for index in indexs:
+        y3[index] += np.random.rand() - 0.5
+    y3 = y3 - 0.2
+    
+    plot = LocalZoomPlot(x, [y1, y2, y3], ['#f0bc94', '#7fe2b3', '#cba0e6'], (100, 150), 0.)  # type: ignore
+    fig = go.Figure()
+
+    fig = plot.originPlot(fig)
+    fig = plot.insetPlot(fig, (0.4, 0.2, 0.4, 0.3))
+    fig = plot.rectOriginArea(fig)
+    fig = plot.addConnectLine(fig, (0, 0), (420, -0.7))
+    fig = plot.addConnectLine(fig, (1, 1), (900, 2.7))
+
+    # 额外对图片进行设置
+    fig.update_layout(
+        width=800, height=600,
+        xaxis=dict(
+            rangemode='tozero',
+            showgrid=False,
+            zeroline=False,
+        ),
+        xaxis2=dict(
+            showgrid=False,
+            zeroline=False
+        ),
+    )
+
+    fig.write_image(save_path)
+
+def plot_curve_test(csv_path, save_path, algorithm, position):
     ''' Read data from csv file and plot the results
     '''
     import os

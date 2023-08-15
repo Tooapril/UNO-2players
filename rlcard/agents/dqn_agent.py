@@ -124,7 +124,7 @@ class DQNAgent(object):
             ts (list): a list of 5 elements that represent the transition
         '''
         (state, action, reward, next_state, done) = tuple(ts)
-        self.feed_memory(state['obs'], action, reward, next_state['obs'], list(state['legal_actions'].keys()), done)
+        self.feed_memory(state['x_batch'], action, reward, next_state['x_batch'], list(state['legal_actions'].keys()), done)
         self.total_t += 1
         tmp = self.total_t - self.replay_memory_init_size
         if tmp>=0 and tmp%self.train_every == 0:
@@ -178,7 +178,7 @@ class DQNAgent(object):
             q_values (numpy.array): a 1-d array where each entry represents a Q value
         '''
         
-        q_values = self.q_estimator.predict_nograd(np.expand_dims(state['obs'], 0))[0]
+        q_values = self.q_estimator.predict_nograd(np.expand_dims(state['x_batch'], 0))[0]
         masked_q_values = -np.inf * np.ones(self.num_actions, dtype=float)
         legal_actions = list(state['legal_actions'].keys())
         masked_q_values[legal_actions] = q_values[legal_actions]

@@ -39,6 +39,7 @@ class UnoRound:
         top = self.dealer.flip_top_card()
         if top.trait == 'wild': # 如果首张是换色牌，则随机选一个颜色
             top.color = self.np_random.choice(UnoCard.info['color'])
+            top.str = top.color + top.str[1:]
         self.target = top
         self.played_cards.append(top)
         return top
