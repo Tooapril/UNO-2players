@@ -346,8 +346,8 @@ def plot_double_curve(csv0_path, csv1_path, save_path, algorithm0, algorithm1, p
                 ys1.append(float(row['reward']))
                 
             fig, ax = plt.subplots()
-            ax.plot(xs0, ys0, label=algorithm0+str(position), color='#DC524C') # 
-            ax.plot(xs1, ys1, label=algorithm1+str(position), color='#739BBA')
+            ax.plot(xs0, ys0, label=algorithm0+str(int(position) + 1), color='#DC524C') # 
+            ax.plot(xs1, ys1, label=algorithm1+str(int(position) + 1), color='#739BBA')
             ax.set(xlabel='Training steps', ylabel='Winning rate')
             ax.legend()
             ax.grid()
@@ -356,4 +356,4 @@ def plot_double_curve(csv0_path, csv1_path, save_path, algorithm0, algorithm1, p
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
 
-            fig.savefig(save_path)
+            fig.savefig(save_path, dpi=300)

@@ -105,19 +105,22 @@ class UnoGame:
         state['current_player'] = self.round.current_player
         return state
 
+    def get_payoff_train(self):
+        ''' Return the payoffs of the game
+
+        Returns:
+            (list): Each entry corresponds to the payoff of one player
+        '''
+        
+        return self.round.get_payoffs_train(self.players)
+
     def get_payoffs(self):
         ''' Return the payoffs of the game
 
         Returns:
             (list): Each entry corresponds to the payoff of one player
         '''
-        # 使用简单的赢者置为 1 作为 payoffs
-        # winner = self.round.winner   
-        # if winner is not None and len(winner) == 1:
-        #     self.payoffs[winner[0]] = 1
-        #     for index, _ in enumerate(self.payoffs):
-        #         if index != winner[0]:
-        #             self.payoffs[index] = -1
+        
         return self.round.get_payoffs(self.players)
     
     def get_scores(self):

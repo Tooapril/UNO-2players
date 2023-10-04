@@ -165,11 +165,11 @@ class Env(object):
 
         # Payoffs
         if not is_training: # 非训练模式，获取胜负情况
-            # payoffs = self.get_payoffs() # 计算对应玩家游戏结果（胜、平、负） WP
-            payoffs = self.get_scores() # 计算对应玩家5的分数 ADP
+            payoffs = self.get_payoffs() # 计算对应玩家游戏结果（胜、平、负） WR
+            # payoffs = self.get_scores() # 计算对应玩家的分数 WS
         else: # 训练模式，获取奖励值
-            # payoffs = self.get_scores() # 以带权的胜率进行训练 ADP
-            payoffs = self.get_payoffs() # 以胜率为奖励值训练 WP
+            payoffs = self.get_scores() # 以带权的胜率进行训练 WS
+            # payoffs = self.get_payoffs_train() # 以胜率为奖励值训练 WR
             
         return trajectories, payoffs
 
@@ -200,6 +200,16 @@ class Env(object):
             (numpy.array): The observed state of the player
         '''
         return self._extract_state(self.game.get_state(player_id))  # type: ignore
+
+    def get_payoffs_train(self):
+        ''' Get the payoffs of players. Must be implemented in the child class.
+
+        Returns:
+            (list): A list of payoffs for each player.
+
+        Note: Must be implemented in the child class.
+        '''
+        raise NotImplementedError
 
     def get_payoffs(self):
         ''' Get the payoffs of players. Must be implemented in the child class.
@@ -244,8 +254,26 @@ class Env(object):
         self.np_random, seed = seeding.np_random(seed)
         self.game.np_random = self.np_random  # type: ignore
         return seed
-
+    
     def _extract_state(self, state):
+        # if self.get_player_id() == 1: # 位置 0 存储的是两人局模型
+        #     return self._extract_state_300(state)
+        # else:
+        #     return self._extract_state_430(state)
+        return self._extract_state_300(state)
+
+    def _extract_state_300(self, state):
+        ''' Extract useful information from state for RL. Must be implemented in the child class.
+
+        Args:
+            state (dict): The raw state
+
+        Returns:
+            (numpy.array): The extracted state
+        '''
+        raise NotImplementedError
+    
+    def _extract_state_430(self, state):
         ''' Extract useful information from state for RL. Must be implemented in the child class.
 
         Args:

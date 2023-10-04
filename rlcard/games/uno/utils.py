@@ -83,7 +83,7 @@ def hand2dict(hand):
             hand_dict[card] += 1
     return hand_dict
 
-def encode_hand(hand):
+def encode_hand_old(hand):
     ''' Encode hand and represerve it into plane
 
     Args:
@@ -115,6 +115,81 @@ def encode_hand(hand):
     
     return np.concatenate((plane[:2][:][:].flatten(), plane2.flatten()))
 
+def encode_hand(hand):
+    ''' Encode hand and represerve it into plane
+
+    Args:
+        plane (array): 3*4*15 numpy array
+        hand (list): list of string of hand's card
+
+    Returns:
+        (array): 3*4*15 numpy array
+    '''
+    wild = 0
+    wild_4 = 0
+    plane = np.zeros((2, 4, 13), dtype=int)
+    plane2 = np.zeros((4, 12), dtype=int)
+    wild_count = np.zeros(5, dtype=int)
+    wild_4_count = np.zeros(5, dtype=int)
+    
+    hand = hand2dict(hand) # 统计各种牌拥有张数
+    for card, count in hand.items():
+        card_info = card.split('-')
+        color = COLOR_MAP[card_info[0]] # 获取当前牌的颜色
+        trait = TRAIT_MAP[card_info[1]] # 获取当前牌的数字或种类
+        if trait == 13: # 万能换色牌
+            wild += 1
+        elif trait == 14: # 万能+4牌
+            wild_4 += 1
+        else: #❗️tips 除万能牌外，同一个颜色的牌型最多有且仅有 2 张
+            plane[count-1][color][trait] = 1 
+            
+    wild_count[wild] = 1 # 记录万能换色牌的数量
+    wild_4_count[wild_4] = 1 # 记录万能+4牌的数量
+    
+    for i in range(4):
+        plane2[i] = plane[1][i][1:13]
+        
+    return np.concatenate((plane[:1][:][:].flatten(), plane2.flatten(), wild_count, wild_4_count))
+
+def encode_other_cards(hand):
+    ''' Encode hand and represerve it into plane
+
+    Args:
+        plane (array): 3*4*15 numpy array
+        hand (list): list of string of hand's card
+
+    Returns:
+        (array): 3*4*15 numpy array
+    '''
+    wild = 0
+    wild_4 = 0
+    plane = np.zeros((3, 4, 13), dtype=int)
+    plane[0] = np.ones((4, 13), dtype=int)
+    wild_count = np.zeros(5, dtype=int)
+    wild_4_count = np.zeros(5, dtype=int)
+    
+    hand = hand2dict(hand) # 统计各种牌拥有张数
+    for card, count in hand.items():
+        card_info = card.split('-')
+        color = COLOR_MAP[card_info[0]] # 获取当前牌的颜色
+        trait = TRAIT_MAP[card_info[1]] # 获取当前牌的数字或种类
+        if trait == 13: # 万能换色牌
+            wild += 1
+        elif trait == 14: # 万能+4牌
+            wild_4 += 1
+        else: #❗️tips 除万能牌外，同一个颜色的牌型最多有且仅有 2 张
+            plane[0][color][trait] = 0
+            plane[count][color][trait] = 1 
+    
+    wild_count[wild] = 1 # 记录万能换色牌的数量
+    wild_4_count[wild_4] = 1 # 记录万能+4牌的数量
+    
+    plane2 = np.zeros((4, 12), dtype=int)
+    for i in range(4):
+        plane2[i] = plane[2][i][1:13]
+    
+    return np.concatenate((plane[:2][:][:].flatten(), plane2.flatten(), wild_count, wild_4_count))
 
 def encode_target(target):
     ''' Encode target and represerve it into plane
@@ -154,11 +229,18 @@ def encode_action(action):
     
     return np.concatenate((plane.flatten(), other_actions))
 
-def encode_action_sequence(action_list, size=63):
+def encode_action_sequence_8(action_list, size=63):
     plane = np.zeros((len(action_list), size), dtype=int)
     for row, card in enumerate(action_list):
         plane[row, :] = encode_action(card)
     plane = plane.reshape(4, 126)
+    return plane
+
+def encode_action_sequence_12(action_list, size=63):
+    plane = np.zeros((len(action_list), size), dtype=int)
+    for row, card in enumerate(action_list):
+        plane[row, :] = encode_action(card)
+    plane = plane.reshape(3, 252)
     return plane
 
 def get_one_hot_array(num_left_cards, max_num_cards=10):

@@ -35,8 +35,8 @@ def evaluate(args):
     
     # Identify model file
     x = [f for f in os.listdir(args.log_dir)
-                if os.path.isfile(os.path.join(args.log_dir, f)) and f.startswith(str(args.position) + "_")] # 获取日志文件下所有 “0_” 开头的
-    x.sort(key=lambda x:int(x.split('.')[0])) # 将所有 0 号位的日志文件排序
+                if os.path.isfile(os.path.join(args.log_dir, f)) and f.startswith(str(args.position) + "_")] # 获取日志文件下所有 “position_” 开头的
+    x.sort(key=lambda x:int(x.split('.')[0])) # 将所有 position 位的日志文件排序
     
     with Logger(args.savedir) as logger:
         for k, v in enumerate(x): # type: ignore

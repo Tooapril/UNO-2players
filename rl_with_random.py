@@ -63,10 +63,10 @@ def train(args):
     print('Model saved in', save_path)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("DQN/NFSP example in RLCard")
+    parser = argparse.ArgumentParser("DQN example in RLCard")
     parser.add_argument('--env', type=str, default='uno',
             choices=['blackjack', 'leduc-holdem', 'limit-holdem', 'doudizhu', 'mahjong', 'no-limit-holdem', 'uno', 'gin-rummy'])
-    parser.add_argument('--algorithm', type=str, default='dqn', choices=['dqn', 'nfsp'])
+    parser.add_argument('--algorithm', type=str, default='dqn')
     parser.add_argument('--cuda', type=str, default='')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--position', type=int, default=1)
